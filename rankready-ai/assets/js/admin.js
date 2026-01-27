@@ -805,3 +805,4 @@ jQuery(document).ready(function ($) {
     console.log('AAG: aagAjax object:', aagAjax);
     console.log('AAG: jQuery version:', jQuery.fn.jquery);
 });
+

@@ -55,16 +55,20 @@ class AAG_Generator
 
     public function process_queue_item_internal()
     {
-        // Check trial status and daily limit
-        if (!$this->license->is_premium() && !$this->is_trial_active()) {
-            return new WP_Error('trial_expired', 'Your trial has expired. Please upgrade to continue.');
+        // Check limits for non-premium users
+        if (!$this->license->is_premium()) {
+            if ($this->is_trial_active()) {
+                // Trial Active: 2 per day, max 1500 words
+                if (!$this->check_daily_limit()) {
+                    return new WP_Error('limit_reached', 'Daily limit reached (2 articles per day during trial).');
+                }
+            } else {
+                // Trial Expired (Free Tier): 1 per week, max 1000 words
+                if (!$this->check_weekly_limit()) {
+                    return new WP_Error('limit_reached', 'Free tier limit reached (1 article per week). Upgrade to Premium for unlimited access.');
+                }
+            }
         }
-
-        /*
-        if (!$this->license->is_premium() && !$this->check_daily_limit()) {
-            return new WP_Error('limit_reached', 'Daily limit reached (2 articles per day during trial).');
-        }
-        */
 
         global $wpdb;
 
@@ -99,11 +103,19 @@ class AAG_Generator
             $prompt .= " Make sure to naturally incorporate these keywords throughout the article: {$item->keywords_to_include}.";
         }
 
-        // Get Requirements
+        // Get Requirements & Enforce Limits
         $word_count = get_option('aag_word_count', '1500');
-        // Enforce trial limit
-        if (!$this->license->is_premium() && $word_count > 1500) {
-            $word_count = '1500';
+
+        if (!$this->license->is_premium()) {
+            if ($this->is_trial_active()) {
+                // Trial: Max 1500
+                if ($word_count > 1500) {
+                    $word_count = '1500';
+                }
+            } else {
+                // Free Tier: Max 1000
+                $word_count = '1000';
+            }
         }
 
         $include_table = get_option('aag_include_table', '1');
@@ -112,6 +124,7 @@ class AAG_Generator
         $article_tone = get_option('aag_article_tone', 'neutral');
         $article_tone_auto = get_option('aag_article_tone_auto', '0');
 
+        $prompt .= " IMPORTANT: Do NOT include the article title as an <h1> heading at the beginning. Start directly with the introduction.";
         $prompt .= " Include an introduction, multiple detailed sections with subheadings, and a conclusion.";
         $prompt .= " The article should be approximately {$word_count} words in length.";
 
@@ -334,6 +347,21 @@ class AAG_Generator
         return ($count === null || $count < 2);
     }
 
+    // Check weekly limit for free tier (1 article per week)
+    public function check_weekly_limit()
+    {
+        if ($this->license->is_premium()) {
+            return true;
+        }
+
+        global $wpdb;
+
+        // Sum articles generated in the last 7 days
+        $count = $wpdb->get_var("SELECT SUM(articles_generated) FROM {$this->usage_table} WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+
+        return ($count === null || $count < 1);
+    }
+
     // Track article generation
     public function track_usage()
     {
@@ -392,10 +420,21 @@ class AAG_Generator
         $stats['month'] = $month_count ?: 0;
 
         $is_premium = $this->license->is_premium();
+        $is_trial = $this->is_trial_active();
 
-        // Remaining for today
-        $stats['remaining'] = $is_premium ? 'Unlimited' : max(0, 2 - $stats['today']);
-        $stats['limit'] = $is_premium ? 'Unlimited' : '2 per day (Trial)';
+        // Remaining
+        if ($is_premium) {
+            $stats['remaining'] = 'Unlimited';
+            $stats['limit'] = 'Unlimited';
+        } elseif ($is_trial) {
+            $stats['remaining'] = max(0, 2 - $stats['today']);
+            $stats['limit'] = '2 per day (Trial)';
+        } else {
+            // Free Tier
+            $weekly_usage = $wpdb->get_var("SELECT SUM(articles_generated) FROM {$this->usage_table} WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+            $stats['remaining'] = max(0, 1 - ($weekly_usage ?: 0));
+            $stats['limit'] = '1 per week (Free)';
+        }
 
         // Trial days left
         $stats['trial_days_left'] = $this->get_trial_days_left();

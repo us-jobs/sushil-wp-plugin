@@ -28,10 +28,10 @@ class AAG_Settings
     public function add_admin_menu()
     {
         add_menu_page(
-            'Auto SEO Article Generator',
-            'Article Generator',
+            'RankReady AI - SEO Article Generator',
+            'RankReady AI',
             'manage_options',
-            'auto-article-generator',
+            'rankready-ai',
             array($this, 'admin_page'),
             'dashicons-edit-large',
             30
@@ -40,7 +40,7 @@ class AAG_Settings
 
     public function enqueue_admin_assets($hook)
     {
-        if (strpos($hook, 'auto-article-generator') === false) {
+        if (strpos($hook, 'rankready-ai') === false) {
             return;
         }
 
@@ -176,11 +176,7 @@ class AAG_Settings
 
             set_time_limit(300); // 5 minutes
 
-            // Check trial and limits
-            if (!$this->license->is_premium() && !$this->generator->is_trial_active()) {
-                wp_send_json_error('Your trial has expired. Please upgrade to continue.');
-                return;
-            }
+            // Limits are checked inside process_queue_item_internal
 
             /*
             if (!$this->generator->check_daily_limit()) {
@@ -327,6 +323,6 @@ class AAG_Settings
             wp_send_json_error($result->get_error_message());
         }
 
-        wp_send_json_success('Connection Successful! Image found and downloaded (ID: ' . $result . '). You can check your Media Library.');
+        wp_send_json_success('Connection Successful! Image found and Test Image downloaded (ID: ' . $result . '). Delete the test image from your Media Library.');
     }
 }

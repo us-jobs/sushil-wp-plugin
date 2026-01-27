@@ -1,12 +1,11 @@
 <?php
 /**
- * Plugin Name: Auto SEO Article Generator
- * Plugin URI: https://example.com/auto-article-generator
- * Description: Automatically generate articles using Gemini AI with featured images from Freepik
- * Version: 1.0.0
- * Author: Your Name
+ * Plugin Name: RankReady AI
+ * Description: Automatically writes SEO-optimized articles with featured images from Freepik
+ * Version: 1.1.0
+ * Author: Sushil M.
  * License: GPL v2 or later
- * Text Domain: auto-article-generator
+ * Text Domain: rankready-ai
  */
 
 if (!defined('ABSPATH')) {

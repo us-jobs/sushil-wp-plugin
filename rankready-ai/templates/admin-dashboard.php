@@ -1,5 +1,6 @@
 <div class="wrap aag-container">
-    <h1>Auto SEO Article Generator</h1>
+    <h1>RankReady AI - Human Like Content Generator</h1>
+    <?php $is_free_tier = !$is_premium && !$trial_active; ?>
 
     <!-- Trial/License Status Banner -->
     <div class="aag-license-banner">
@@ -14,8 +15,11 @@
             </div>
         <?php else: ?>
             <div class="notice notice-warning">
-                <p><strong>⚠️ Trial Expired</strong> - Your 7-day trial has ended. <a href="#" class="aag-nav-btn"
-                        data-target="license">Upgrade to Premium</a> to continue.</p>
+                <div class="notice notice-warning">
+                    <p><strong>⚠️ Trial Expired - Free Tier Active.</strong> You can generate 1 article per week (max 1000
+                        words). <a href="#" class="aag-nav-btn" data-target="license">Upgrade to Premium</a> for unlimited
+                        access.</p>
+                </div>
             </div>
         <?php endif; ?>
     </div>
@@ -57,6 +61,7 @@
         <form id="aag-settings-form">
             <input type="hidden" name="gen_method_saved"
                 value="<?php echo esc_attr(get_option('aag_gen_method', 'method1')); ?>">
+
 
 
             <table class="form-table">
@@ -105,12 +110,15 @@
                     <td>
                         <?php
                         $frequency = get_option('aag_schedule_frequency', 'daily');
+                        if ($is_free_tier)
+                            $frequency = 'weekly';
                         ?>
                         <select id="schedule_frequency" name="schedule_frequency">
-                            <option value="daily" <?php selected($frequency, 'daily'); ?>>Every Day</option>
+                            <option value="daily" <?php selected($frequency, 'daily'); ?> <?php echo $is_free_tier ? 'disabled' : ''; ?>>Every Day <?php echo $is_free_tier ? '(Upgrade)' : ''; ?></option>
                             <option value="weekly" <?php selected($frequency, 'weekly'); ?>>Every Week</option>
-                            <option value="monthly" <?php selected($frequency, 'monthly'); ?>>Every Month</option>
-                            <option value="custom" <?php selected($frequency, 'custom'); ?>>Custom Interval (Minutes)
+                            <option value="monthly" <?php selected($frequency, 'monthly'); ?> <?php echo $is_free_tier ? 'disabled' : ''; ?>>Every Month <?php echo $is_free_tier ? '(Upgrade)' : ''; ?></option>
+                            <option value="custom" <?php selected($frequency, 'custom'); ?> <?php echo $is_free_tier ? 'disabled' : ''; ?>>Custom Interval (Minutes)
+                                <?php echo $is_free_tier ? '(Upgrade)' : ''; ?>
                             </option>
                         </select>
                     </td>
@@ -279,12 +287,17 @@
                     <td>
                         <?php
                         $word_count = get_option('aag_word_count', '1500');
+                        if ($is_free_tier)
+                            $word_count = '1000';
                         $is_trial = $usage_stats['trial_active'] ?? true; // fallback
                         ?>
                         <select id="target_word_count" name="target_word_count">
-                            <option value="1500" <?php selected($word_count, '1500'); ?>>1500 Words</option>
-                            <option value="2500" <?php selected($word_count, '2500'); ?> <?php echo $is_trial ? 'disabled' : ''; ?>>2500 Words <?php echo $is_trial ? '(Pro Only)' : ''; ?></option>
-                            <option value="3000" <?php selected($word_count, '3000'); ?> <?php echo $is_trial ? 'disabled' : ''; ?>>3000 Words <?php echo $is_trial ? '(Pro Only)' : ''; ?></option>
+                            <option value="1000" <?php selected($word_count, '1000'); ?>>1000 Words</option>
+                            <option value="1500" <?php selected($word_count, '1500'); ?> <?php echo $is_free_tier ? 'disabled' : ''; ?>>1500 Words <?php echo $is_free_tier ? '(Upgrade)' : ''; ?></option>
+                            <option value="2500" <?php selected($word_count, '2500'); ?> <?php echo (!$is_premium) ? 'disabled' : ''; ?>>2500 Words <?php echo (!$is_premium) ? '(Upgrade)' : ''; ?>
+                            </option>
+                            <option value="3000" <?php selected($word_count, '3000'); ?> <?php echo (!$is_premium) ? 'disabled' : ''; ?>>3000 Words <?php echo (!$is_premium) ? '(Upgrade)' : ''; ?>
+                            </option>
                         </select>
                         <?php if (!$is_premium): ?>
                             <p class="description">During trial, only 1500 words option is available. <a href="#"
@@ -454,9 +467,24 @@
         <?php if ($is_premium): ?>
             <div class="aag-premium-box active">
                 <h3>✅ Premium Active</h3>
-                <p>Thank you for supporting Auto SEO Article Generator! You have access to all features.</p>
+                <p>Thank you for supporting RankReady AI! You have access to all features.</p>
                 <hr>
-                <p>License Key: <code><?php echo esc_html($license_key); ?></code></p>
+                <p>License Key:
+                    <code>
+                                                            <?php
+                                                            if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                echo esc_html($masked_key);
+                                                            } else {
+                                                                echo '********';
+                                                            }
+                                                            ?>
+                                                        </code>
+                </p>
+                <p class="description" style="margin-top: 5px;">
+                    This license key was sent to your email ID. <br>
+                    To retrieve a lost license key, please send an email from your registered email ID to support.
+                </p>
                 <p style="margin-top: 20px;">
                     <button id="deactivate-license-btn" class="button button-secondary">Deactivate License</button>
                 </p>
