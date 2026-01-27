@@ -485,6 +485,59 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // License Activation
+    $('#aag-license-form').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type="submit"]');
+        const key = $('#license_key').val().trim();
+        const originalText = $btn.html();
+
+        $btn.prop('disabled', true).html('Activating...');
+
+        $.post(aagAjax.ajax_url, {
+            action: 'aag_activate_license',
+            nonce: aagAjax.nonce,
+            license_key: key
+        }, function (response) {
+            $btn.prop('disabled', false).html(originalText);
+            if (response.success) {
+                showMessage(response.data, 'success');
+                setTimeout(function () {
+                    location.reload();
+                }, 1500);
+            } else {
+                showMessage(response.data, 'error');
+            }
+        });
+    });
+
+    // License Deactivation
+    $('#deactivate-license-btn').on('click', function (e) {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to deactivate your license? Premium features will be locked.')) {
+            return;
+        }
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).html('Deactivating...');
+
+        $.post(aagAjax.ajax_url, {
+            action: 'aag_deactivate_license',
+            nonce: aagAjax.nonce
+        }, function (response) {
+            if (response.success) {
+                showMessage(response.data, 'success');
+                setTimeout(function () {
+                    location.reload();
+                }, 1500);
+            } else {
+                $btn.prop('disabled', false).html('Deactivate License');
+                showMessage(response.data, 'error');
+            }
+        });
+    });
+
     // Helper functions
     function refreshQueue() {
         console.log('AAG: Refreshing queue');

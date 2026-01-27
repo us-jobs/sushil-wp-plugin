@@ -39,6 +39,28 @@
     background: #f0f6fc;
 }
 
+/* License Tab Custom Style */
+.aag-tab-btn[data-tab="license"] {
+    background: #ff4c4c !important;
+    /* Bright Red-Orange */
+    color: #ffffff !important;
+    border-radius: 4px 4px 0 0;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -2px 5px rgba(255, 76, 76, 0.3);
+}
+
+.aag-tab-btn[data-tab="license"]:hover {
+    background: #e63939 !important;
+    color: #ffffff !important;
+}
+
+.aag-tab-btn[data-tab="license"].active {
+    background: #ffffff !important;
+    color: #ff4c4c !important;
+    border-bottom: 4px solid #ff4c4c !important;
+}
+
 .aag-tab-content {
     display: none;
     background: #fff;

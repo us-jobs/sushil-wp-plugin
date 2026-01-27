@@ -1,0 +1,486 @@
+<div class="wrap aag-container">
+    <h1>Auto SEO Article Generator</h1>
+
+    <!-- Trial/License Status Banner -->
+    <div class="aag-license-banner">
+        <?php if ($is_premium): ?>
+            <div class="notice notice-success">
+                <p><strong>🌟 Premium Active!</strong> You have unlimited access to article generation.</p>
+            </div>
+        <?php elseif ($trial_active): ?>
+            <div class="notice notice-info">
+                <p><strong>🎉 Free Trial Active!</strong> You have <?php echo $trial_days_left; ?> days left.
+                    Articles today: <?php echo $usage_stats['today']; ?>/2</p>
+            </div>
+        <?php else: ?>
+            <div class="notice notice-warning">
+                <p><strong>⚠️ Trial Expired</strong> - Your 7-day trial has ended. <a href="#" class="aag-nav-btn"
+                        data-target="license">Upgrade to Premium</a> to continue.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Usage Stats -->
+    <div class="aag-usage-stats">
+        <div class="stat-box">
+            <h3><?php echo $usage_stats['today']; ?></h3>
+            <p>Today</p>
+        </div>
+        <div class="stat-box">
+            <h3><?php echo $usage_stats['month']; ?></h3>
+            <p>This Month</p>
+        </div>
+        <div class="stat-box">
+            <h3><?php echo $usage_stats['remaining']; ?></h3>
+            <p>Remaining Today</p>
+        </div>
+        <div class="stat-box">
+            <h3><?php echo $pending_count; ?></h3>
+            <p>In Queue</p>
+        </div>
+    </div>
+
+    <div class="aag-tabs">
+        <button class="aag-tab-btn active" data-tab="settings">Schedule Settings</button>
+        <button class="aag-tab-btn" data-tab="requirements">Article Requirements</button>
+        <button class="aag-tab-btn" data-tab="method1">Method 1: Title List</button>
+        <button class="aag-tab-btn" data-tab="method2">Method 2: Keyword Based</button>
+        <button class="aag-tab-btn" data-tab="queue">Article Status</button>
+        <button class="aag-tab-btn" data-tab="license">License / Upgrade</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="aag-tab-content active" id="settings-tab">
+
+        <form id="aag-settings-form">
+            <input type="hidden" name="gen_method_saved"
+                value="<?php echo esc_attr(get_option('aag_gen_method', 'method1')); ?>">
+
+
+            <table class="form-table">
+                <!-- Generation Method -->
+                <tr>
+                    <th><label for="gen_method">Generation Source <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Choose how articles are generated: from a pre-defined list
+                                    of titles or dynamically from a keyword.</span></span></label></th>
+                    <td>
+                        <select id="gen_method" name="gen_method">
+                            <option value="method1" <?php selected(get_option('aag_gen_method'), 'method1'); ?>>Method
+                                1: Title List</option>
+                            <option value="method2" <?php selected(get_option('aag_gen_method'), 'method2'); ?>>Method
+                                2: Keyword Based</option>
+                        </select>
+                        <div style="margin-top: 10px;">
+                            <button type="button" class="button aag-nav-btn" data-target="method1">Go to Methods 1
+                                Settings</button>
+                            <button type="button" class="button aag-nav-btn" data-target="method2">Go to Methods 2
+                                Settings</button>
+                        </div>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <th><label for="post_status">Post Status <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Select whether generated posts should be Drafts, Published,
+                                    or Pending Review.</span></span></label></th>
+                    <td>
+                        <select id="post_status" name="post_status">
+                            <option value="draft" <?php selected($post_status, 'draft'); ?>>Draft</option>
+                            <option value="publish" <?php selected($post_status, 'publish'); ?>>Publish</option>
+                            <option value="pending" <?php selected($post_status, 'pending'); ?>>Pending Review</option>
+                        </select>
+                    </td>
+                </tr>
+                <!-- Frequency Dropdown -->
+                <tr>
+                    <th><label for="schedule_frequency">Schedule Frequency <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Choose how often you want the plugin to generate
+                                    articles.</span></span></label></th>
+                    <td>
+                        <?php
+                        $frequency = get_option('aag_schedule_frequency', 'daily');
+                        ?>
+                        <select id="schedule_frequency" name="schedule_frequency">
+                            <option value="daily" <?php selected($frequency, 'daily'); ?>>Every Day</option>
+                            <option value="weekly" <?php selected($frequency, 'weekly'); ?>>Every Week</option>
+                            <option value="monthly" <?php selected($frequency, 'monthly'); ?>>Every Month</option>
+                            <option value="custom" <?php selected($frequency, 'custom'); ?>>Custom Interval (Minutes)
+                            </option>
+                        </select>
+                    </td>
+                </tr>
+
+                <!-- Custom Interval (Hidden unless custom is selected) -->
+                <tr id="custom_interval_row" <?php if ($frequency !== 'custom')
+                    echo 'style="display:none;"'; ?>>
+                    <th><label for="schedule_interval">Custom Interval (minutes) <span
+                                class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Enter the interval in minutes between each run (e.g., 60
+                                    for every hour).</span></span></label></th>
+                    <td>
+                        <input type="number" id="schedule_interval" name="schedule_interval"
+                            value="<?php echo esc_attr($schedule_interval); ?>" min="15" max="10080">
+                        <p class="description">Time between each article generation (minutes)</p>
+                    </td>
+                </tr>
+
+                <!-- Articles Per Run -->
+                <tr>
+                    <th><label for="articles_per_run">Articles Per Run <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">How many articles should be generated each time the
+                                    schedule executes.</span></span></label></th>
+                    <td>
+                        <?php $articles_per_run = get_option('aag_articles_per_run', '1'); ?>
+                        <input type="number" id="articles_per_run" name="articles_per_run"
+                            value="<?php echo esc_attr($articles_per_run); ?>" min="1" max="10">
+                        <p class="description">How many articles to generate each time the schedule runs</p>
+                    </td>
+                </tr>
+
+                <!-- Time Selection -->
+                <tr id="time_selection_row">
+                    <th><label>Schedule Time <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Select the specific time of day for the schedule to run
+                                    (daily/weekly/monthly).</span></span></label></th>
+                    <td>
+                        <?php
+                        $saved_time = get_option('aag_schedule_time', '10:00 AM');
+                        list($time_part, $ampm_part) = explode(' ', $saved_time);
+                        list($hour_part, $minute_part) = explode(':', $time_part);
+                        ?>
+                        <select name="schedule_hour" class="tiny-text">
+                            <?php for ($i = 1; $i <= 12; $i++): ?>
+                                <option value="<?php echo sprintf('%02d', $i); ?>" <?php selected($hour_part, sprintf('%02d', $i)); ?>>
+                                    <?php echo sprintf('%02d', $i); ?>
+                                </option>
+                            <?php endfor; ?>
+                        </select>
+                        :
+                        <select name="schedule_minute" class="tiny-text">
+                            <option value="00" <?php selected($minute_part, '00'); ?>>00</option>
+                            <option value="15" <?php selected($minute_part, '15'); ?>>15</option>
+                            <option value="30" <?php selected($minute_part, '30'); ?>>30</option>
+                            <option value="45" <?php selected($minute_part, '45'); ?>>45</option>
+                        </select>
+                        <select name="schedule_ampm" class="tiny-text">
+                            <option value="AM" <?php selected($ampm_part, 'AM'); ?>>AM</option>
+                            <option value="PM" <?php selected($ampm_part, 'PM'); ?>>PM</option>
+                        </select>
+                        <p class="description">Select the local time to run (for Daily, Weekly, Monthly)</p>
+                    </td>
+                </tr>
+
+                <!-- Timezone -->
+                <tr>
+                    <th><label for="schedule_timezone">Timezone <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Select your local timezone to ensure the schedule runs at
+                                    the correct time.</span></span></label></th>
+                    <td>
+                        <div style="margin-bottom: 5px;">
+                            <label>
+                                <input type="checkbox" id="aag_auto_timezone" name="aag_auto_timezone" value="1" <?php checked(get_option('aag_auto_timezone'), '1'); ?>>
+                                Your current timezone is <span id="aag_detected_tz_display">Detecting...</span>
+                            </label>
+                        </div>
+                        <?php
+                        $saved_timezone = get_option('aag_schedule_timezone', wp_timezone_string());
+                        $timezones = timezone_identifiers_list();
+                        ?>
+                        <select id="schedule_timezone" name="schedule_timezone">
+                            <?php foreach ($timezones as $tz): ?>
+                                <option value="<?php echo esc_attr($tz); ?>" <?php selected($saved_timezone, $tz); ?>>
+                                    <?php echo esc_html($tz); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+
+                <!-- Generate Immediately -->
+                <tr>
+                    <th></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" id="generate_immediate" name="generate_immediate" value="1">
+                            Generate 1 article immediately on save
+                        </label>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <button type="submit" id="settings_submit_btn" class="button button-primary">Save and Schedule</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- Method 1 Tab -->
+    <div class="aag-tab-content" id="method1-tab">
+        <h2>Method 1: Title List Source</h2>
+        <form id="aag-method1-form">
+            <p>
+                <label for="title_list"><strong>Article Titles Source (one per line)</strong></label>
+                <textarea id="title_list" name="title_list" rows="10" class="large-text"
+                    placeholder="Enter article titles, one per line..."><?php echo esc_textarea(get_option('aag_method1_titles', '')); ?></textarea>
+                <span class="description">Scheduler will pick titles from this list top-to-bottom.</span>
+            </p>
+            <p>
+                <label for="title_keywords"><strong>Keywords to Include (Optional)</strong></label>
+                <input type="text" id="title_keywords" name="title_keywords" class="regular-text"
+                    value="<?php echo esc_attr(get_option('aag_method1_keywords', '')); ?>"
+                    placeholder="e.g., SEO, WordPress, digital marketing">
+                <span class="description">Common keywords for these articles</span>
+            </p>
+            <p class="submit">
+                <button type="submit" class="button button-primary">Save Title List</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- Method 2 Tab -->
+    <div class="aag-tab-content" id="method2-tab">
+        <h2>Method 2: Keyword Based Source</h2>
+        <form id="aag-method2-form">
+            <table class="form-table">
+                <tr>
+                    <th><label for="keyword">Target Keyword</label></th>
+                    <td>
+                        <input type="text" id="keyword" name="keyword" class="regular-text"
+                            value="<?php echo esc_attr(get_option('aag_method2_keyword', '')); ?>"
+                            placeholder="e.g., artificial intelligence">
+                        <p class="description">Plugin will dynamically generate trending titles based on this keyword.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <button type="submit" class="button button-primary">Save Keyword Source</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- Article Requirements Tab -->
+    <div class="aag-tab-content" id="requirements-tab">
+        <h2>Article Requirements</h2>
+        <form id="aag-requirements-form">
+            <table class="form-table">
+                <!-- Word Count -->
+                <tr>
+                    <th><label for="target_word_count">Target Word Count</label></th>
+                    <td>
+                        <?php
+                        $word_count = get_option('aag_word_count', '1500');
+                        $is_trial = $usage_stats['trial_active'] ?? true; // fallback
+                        ?>
+                        <select id="target_word_count" name="target_word_count">
+                            <option value="1500" <?php selected($word_count, '1500'); ?>>1500 Words</option>
+                            <option value="2500" <?php selected($word_count, '2500'); ?> <?php echo $is_trial ? 'disabled' : ''; ?>>2500 Words <?php echo $is_trial ? '(Pro Only)' : ''; ?></option>
+                            <option value="3000" <?php selected($word_count, '3000'); ?> <?php echo $is_trial ? 'disabled' : ''; ?>>3000 Words <?php echo $is_trial ? '(Pro Only)' : ''; ?></option>
+                        </select>
+                        <?php if (!$is_premium): ?>
+                            <p class="description">During trial, only 1500 words option is available. <a href="#"
+                                    class="aag-nav-btn" data-target="license">Upgrade to Unlock</a></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="article_tone">Article Tone</label></th>
+                    <td>
+                        <?php
+                        $article_tone = get_option('aag_article_tone', 'neutral');
+                        $article_tone_auto = get_option('aag_article_tone_auto', '0');
+                        ?>
+                        <select id="article_tone" name="article_tone">
+                            <option value="neutral" <?php selected($article_tone, 'neutral'); ?>>Neutral</option>
+                            <option value="friendly" <?php selected($article_tone, 'friendly'); ?>>Friendly</option>
+                            <option value="professional" <?php selected($article_tone, 'professional'); ?>>Professional
+                            </option>
+                            <option value="persuasive" <?php selected($article_tone, 'persuasive'); ?>>Persuasive
+                            </option>
+                            <option value="technical" <?php selected($article_tone, 'technical'); ?>>Technical</option>
+                        </select>
+                        <label style="margin-left:10px;">
+                            <input type="checkbox" id="article_tone_auto" name="article_tone_auto" value="1" <?php checked($article_tone_auto, '1'); ?>>
+                            Let AI decide most suitable article tone
+                        </label>
+                        <p class="description">Controls the tone of voice used in generated articles.</p>
+                    </td>
+                </tr>
+                <!-- Tables -->
+                <tr>
+                    <th>Formatting Options</th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="include_table" value="1" <?php checked(get_option('aag_include_table', '1'), '1'); ?>>
+                                Include Table
+                            </label>
+                            <br>
+                            <label>
+                                <input type="checkbox" name="include_lists" value="1" <?php checked(get_option('aag_include_lists', '1'), '1'); ?>>
+                                Include Lists (Bulleted/Numbered)
+                            </label>
+                            <br>
+                            <label>
+                                <input type="checkbox" name="include_faq" value="1" <?php checked(get_option('aag_include_faq', '0'), '1'); ?>>
+                                Include FAQ Section
+                            </label>
+                        </fieldset>
+                    </td>
+                </tr>
+                <!-- API Keys -->
+                <tr>
+                    <th><label for="gemini_api_key">Gemini API Key <span class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Enter your
+                                    Google Gemini API key here to enable content
+                                    generation.</span></span></label></th>
+                    <td>
+                        <input type="text" id="gemini_api_key" name="gemini_api_key"
+                            value="<?php echo esc_attr($gemini_api_key); ?>" class="regular-text">
+                        <p class="description">Get your API key from <a href="https://makersuite.google.com/app/apikey"
+                                target="_blank">Google AI Studio</a></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="freepik_api_key">Freepik API Key (Optional) <span
+                                class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Enter your Freepik API key if you want to automatically add
+                                    featured images.</span></span></label></th>
+                    <td>
+                        <input type="text" id="freepik_api_key" name="freepik_api_key"
+                            value="<?php echo esc_attr($freepik_api_key); ?>" class="regular-text">
+                        <p class="description">Get your API key from <a href="https://www.freepik.com/api"
+                                target="_blank">Freepik API</a> (Leave empty to skip images)</p>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <button type="submit" id="requirements_submit_btn" class="button button-primary">Save
+                    Requirements</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- Article Status Tab -->
+    <div class="aag-tab-content" id="queue-tab">
+        <h2>Article Status</h2>
+        <div class="aag-queue-controls">
+            <button id="process-queue-btn" class="button button-primary">Process Next Article</button>
+            <button id="refresh-queue-btn" class="button">Refresh Queue</button>
+            <button id="clear-queue-btn" class="button button-link-delete">Clear All Queue</button>
+            <span style="margin-left: 20px;">
+                Pending: <strong id="pending-count"><?php echo $pending_count; ?></strong>
+            </span>
+        </div>
+
+        <table class="wp-list-table widefat fixed striped" id="queue-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Keyword</th>
+                    <th>Keywords to Include</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Post Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($queue_items)): ?>
+                    <tr>
+                        <td colspan="7" style="text-align:center;">No items in queue</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($queue_items as $item): ?>
+                        <tr>
+                            <td><?php echo $item->id; ?></td>
+                            <td><?php echo esc_html($item->title); ?></td>
+                            <td><?php echo esc_html($item->keyword ?: '-'); ?></td>
+                            <td><?php echo esc_html($item->keywords_to_include ?: '-'); ?></td>
+                            <td><span
+                                    class="aag-status-<?php echo $item->status; ?>"><?php echo ucfirst($item->status); ?></span>
+                            </td>
+                            <td>
+                                <?php
+                                if ($item->status === 'pending' && !empty($item->scheduled_at)) {
+                                    echo date_i18n('Y-m-d H:i', strtotime($item->scheduled_at)) . ' · ' . intval($articles_per_run) . ' per run';
+                                } else {
+                                    echo $item->created_at ? date_i18n('Y-m-d H:i', strtotime($item->created_at)) : '-';
+                                }
+                                ?>
+                            </td>
+                            <td>
+                                <?php if ($item->post_id): ?>
+                                    <a href="<?php echo get_edit_post_link($item->post_id); ?>" target="_blank">Edit Post</a>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- License Tab -->
+    <div class="aag-tab-content" id="license-tab">
+        <h2>License & Upgrade</h2>
+
+        <?php if ($is_premium): ?>
+            <div class="aag-premium-box active">
+                <h3>✅ Premium Active</h3>
+                <p>Thank you for supporting Auto SEO Article Generator! You have access to all features.</p>
+                <hr>
+                <p>License Key: <code><?php echo esc_html($license_key); ?></code></p>
+                <p style="margin-top: 20px;">
+                    <button id="deactivate-license-btn" class="button button-secondary">Deactivate License</button>
+                </p>
+            </div>
+        <?php else: ?>
+            <div class="aag-pricing-container">
+                <div class="aag-pricing-box">
+                    <h3>Upgrade to Premium</h3>
+                    <ul>
+                        <li>✅ Unlimited Article Generation</li>
+                        <li>✅ Remove Daily Limits</li>
+                        <li>✅ Longer Articles (2500+ words)</li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <div class="aag-price-tag">$29 / one-time</div>
+
+                    <!-- PayPal Button -->
+                    <div style="margin: 20px 0;">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
+                            target="_blank" class="button button-primary button-hero">Complete Payment via PayPal</a>
+                        <p class="description" style="margin-top:10px;">Clicking will open PayPal in a new tab.</p>
+                    </div>
+
+                    <hr style="margin: 30px 0;">
+
+                    <h4>Already purchased? Activate License</h4>
+                    <p>Enter the license key you received via email.</p>
+                    <form id="aag-license-form">
+                        <div style="display:flex; gap:10px; max-width:400px;">
+                            <input type="text" id="license_key" name="license_key" class="regular-text"
+                                placeholder="Enter License Key (e.g. PREMIUM-XXX)" required>
+                            <button type="submit" class="button button-primary">Activate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <?php endif; ?>
+
+    </div>
+
+    <div id="aag-message" class="notice" style="display:none;"></div>
+</div>
