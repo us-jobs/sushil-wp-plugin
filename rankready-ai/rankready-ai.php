@@ -3,6 +3,8 @@
  * Plugin Name: RankReady AI
  * Description: Automatically writes SEO-optimized articles with featured images from Freepik
  * Version: 1.1.0
+ * Requires at least: 5.0
+ * Tested up to: 6.9
  * Author: Sushil M.
  * License: GPL v2 or later
  * Text Domain: rankready-ai

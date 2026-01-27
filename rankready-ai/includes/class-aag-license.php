@@ -44,7 +44,13 @@ class AAG_License
         }
 
         // Call Remote API
-        $response = wp_remote_get($this->api_url . '?action=activate&key=' . $key . '&domain=' . $_SERVER['HTTP_HOST']);
+        $url = add_query_arg(array(
+            'action' => 'activate',
+            'key' => $key,
+            'domain' => $_SERVER['HTTP_HOST']
+        ), $this->api_url);
+
+        $response = wp_remote_get($url);
 
         if (is_wp_error($response)) {
             wp_send_json_error('Server connection failed. Please try again.');

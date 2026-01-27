@@ -10,8 +10,8 @@
             </div>
         <?php elseif ($trial_active): ?>
             <div class="notice notice-info">
-                <p><strong>🎉 Free Trial Active!</strong> You have <?php echo $trial_days_left; ?> days left.
-                    Articles today: <?php echo $usage_stats['today']; ?>/2</p>
+                <p><strong>🎉 Free Trial Active!</strong> You have <?php echo esc_html($trial_days_left); ?> days left.
+                    Articles today: <?php echo esc_html($usage_stats['today']); ?>/2</p>
             </div>
         <?php else: ?>
             <div class="notice notice-warning">
@@ -27,19 +27,19 @@
     <!-- Usage Stats -->
     <div class="aag-usage-stats">
         <div class="stat-box">
-            <h3><?php echo $usage_stats['today']; ?></h3>
+            <h3><?php echo esc_html($usage_stats['today']); ?></h3>
             <p>Today</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo $usage_stats['month']; ?></h3>
+            <h3><?php echo esc_html($usage_stats['month']); ?></h3>
             <p>This Month</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo $usage_stats['remaining']; ?></h3>
+            <h3><?php echo esc_html($usage_stats['remaining']); ?></h3>
             <p>Remaining Today</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo $pending_count; ?></h3>
+            <h3><?php echo esc_html($pending_count); ?></h3>
             <p>In Queue</p>
         </div>
     </div>
@@ -395,7 +395,7 @@
             <button id="refresh-queue-btn" class="button">Refresh Queue</button>
             <button id="clear-queue-btn" class="button button-link-delete">Clear All Queue</button>
             <span style="margin-left: 20px;">
-                Pending: <strong id="pending-count"><?php echo $pending_count; ?></strong>
+                Pending: <strong id="pending-count"><?php echo esc_html($pending_count); ?></strong>
             </span>
         </div>
 
@@ -422,19 +422,19 @@
                 <?php else: ?>
                     <?php foreach ($queue_items as $item): ?>
                         <tr>
-                            <td><?php echo $item->id; ?></td>
+                            <td><?php echo esc_html($item->id); ?></td>
                             <td><?php echo esc_html($item->title); ?></td>
                             <td><?php echo esc_html($item->keyword ?: '-'); ?></td>
                             <td><?php echo esc_html($item->keywords_to_include ?: '-'); ?></td>
                             <td><span
-                                    class="aag-status-<?php echo $item->status; ?>"><?php echo ucfirst($item->status); ?></span>
+                                    class="aag-status-<?php echo esc_attr($item->status); ?>"><?php echo esc_html(ucfirst($item->status)); ?></span>
                             </td>
                             <td>
                                 <?php
                                 if ($item->status === 'pending' && !empty($item->scheduled_at)) {
-                                    echo date_i18n('Y-m-d H:i', strtotime($item->scheduled_at)) . ' · ' . intval($articles_per_run) . ' per run';
+                                    echo esc_html(date_i18n('Y-m-d H:i', strtotime($item->scheduled_at))) . ' · ' . esc_html(intval($articles_per_run)) . ' per run';
                                 } else {
-                                    echo $item->created_at ? date_i18n('Y-m-d H:i', strtotime($item->created_at)) : '-';
+                                    echo $item->created_at ? esc_html(date_i18n('Y-m-d H:i', strtotime($item->created_at))) : '-';
                                 }
                                 ?>
                             </td>
@@ -447,8 +447,8 @@
                             </td>
                             <td>
                                 <?php if ($item->status === 'pending'): ?>
-                                    <button class="button button-small aag-delete-item-btn" data-id="<?php echo $item->id; ?>"
-                                        title="Delete Article">
+                                    <button class="button button-small aag-delete-item-btn"
+                                        data-id="<?php echo esc_attr($item->id); ?>" title="Delete Article">
                                         <span class="dashicons dashicons-trash" style="line-height: 1.3;"></span>
                                     </button>
                                 <?php endif; ?>
@@ -471,15 +471,15 @@
                 <hr>
                 <p>License Key:
                     <code>
-                                                            <?php
-                                                            if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                echo esc_html($masked_key);
-                                                            } else {
-                                                                echo '********';
-                                                            }
-                                                            ?>
-                                                        </code>
+                                                                    <?php
+                                                                    if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                        echo esc_html($masked_key);
+                                                                    } else {
+                                                                        echo '********';
+                                                                    }
+                                                                    ?>
+                                                                </code>
                 </p>
                 <p class="description" style="margin-top: 5px;">
                     This license key was sent to your email ID. <br>
@@ -499,7 +499,7 @@
                         <li>✅ Longer Articles (2500+ words)</li>
                         <li>✅ Priority Support</li>
                     </ul>
-                    <div class="aag-price-tag">$29 / one-time</div>
+                    <div class="aag-price-tag highlighted">$29 / one-time</div>
 
                     <!-- Payment Options Grid -->
                     <div class="aag-payment-grid">
@@ -508,12 +508,11 @@
                             <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
                                 target="_blank" class="button button-primary button-hero aag-btn-paypal">
                                 <span class="aag-btn-icon">
-                                    <img src="<?php echo plugin_dir_url(dirname(__FILE__)) . 'assets/icons/paypal.svg'; ?>"
+                                    <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/icons/paypal.svg'); ?>"
                                         width="20" height="20" alt="PayPal">
                                 </span>
                                 PayPal Checkout
                             </a>
-                            <p class="description">Global customers ($29)</p>
                         </div>
 
                         <!-- UPI Button (Mobile Only) / QR (Desktop) -->
@@ -521,13 +520,13 @@
                             <a href="upi://pay?pa=sushilmohan98-1@okhdfcbank&pn=Sushil%20Mohan&am=2400&cu=INR&tn=Auto%20Article%20Generator"
                                 class="button button-secondary button-hero upi-pay-btn aag-btn-gpay">
                                 <span class="aag-btn-icon">
-                                    <img src="<?php echo plugin_dir_url(dirname(__FILE__)) . 'assets/icons/gpay.svg'; ?>"
+                                    <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/icons/gpay.svg'); ?>"
                                         width="20" height="20" alt="Google Pay">
                                 </span>
                                 Pay via Google Pay
                             </a>
                             <div class="upi-qr-code">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=sushilmohan98-1@okhdfcbank%26pn=Sushil%20Mohan%26am=2400%26cu=INR%26tn=Auto%20Article%20Generator"
+                                <img src="<?php echo esc_url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=sushilmohan98-1@okhdfcbank%26pn=Sushil%20Mohan%26am=2400%26cu=INR%26tn=Auto%20Article%20Generator'); ?>"
                                     alt="UPI QR Code">
                             </div>
                             <p class="description">Indian users (GPay, Paytm, etc.)</p>

@@ -538,3 +538,18 @@
         grid-template-columns: 1fr;
     }
 }
+
+.aag-price-tag.highlighted {
+    font-size: 26px;
+    font-weight: 900;
+    color: #000;
+    background: #ffeb3b;
+    /* Bright Yellow */
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 20px 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 3px solid #fbc02d;
+    text-transform: uppercase;
+}
