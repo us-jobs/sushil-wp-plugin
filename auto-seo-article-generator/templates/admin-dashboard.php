@@ -46,7 +46,9 @@
         <button class="aag-tab-btn" data-tab="method1">Method 1: Title List</button>
         <button class="aag-tab-btn" data-tab="method2">Method 2: Keyword Based</button>
         <button class="aag-tab-btn" data-tab="queue">Article Status</button>
-        <button class="aag-tab-btn" data-tab="license">License / Upgrade</button>
+        <button class="aag-tab-btn <?php echo $is_premium ? 'is-premium-tab' : ''; ?>" data-tab="license">
+            <?php echo $is_premium ? 'Premium User' : 'License / Upgrade'; ?>
+        </button>
     </div>
 
     <!-- Settings Tab -->
@@ -358,6 +360,8 @@
                     <td>
                         <input type="text" id="freepik_api_key" name="freepik_api_key"
                             value="<?php echo esc_attr($freepik_api_key); ?>" class="regular-text">
+                        <button type="button" id="aag-test-freepik-btn" class="button">Test Connection</button>
+                        <span id="freepik-test-result"></span>
                         <p class="description">Get your API key from <a href="https://www.freepik.com/api"
                                 target="_blank">Freepik API</a> (Leave empty to skip images)</p>
                     </td>
@@ -392,12 +396,15 @@
                     <th>Status</th>
                     <th>Created</th>
                     <th>Post Link</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($queue_items)): ?>
                     <tr>
-                        <td colspan="7" style="text-align:center;">No items in queue</td>
+                    <tr>
+                        <td colspan="8" style="text-align:center;">No items in queue</td>
+                    </tr>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($queue_items as $item): ?>
@@ -423,6 +430,14 @@
                                     <a href="<?php echo get_edit_post_link($item->post_id); ?>" target="_blank">Edit Post</a>
                                 <?php else: ?>
                                     -
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($item->status === 'pending'): ?>
+                                    <button class="button button-small aag-delete-item-btn" data-id="<?php echo $item->id; ?>"
+                                        title="Delete Article">
+                                        <span class="dashicons dashicons-trash" style="line-height: 1.3;"></span>
+                                    </button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -458,12 +473,59 @@
                     </ul>
                     <div class="aag-price-tag">$29 / one-time</div>
 
-                    <!-- PayPal Button -->
-                    <div style="margin: 20px 0;">
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
-                            target="_blank" class="button button-primary button-hero">Complete Payment via PayPal</a>
-                        <p class="description" style="margin-top:10px;">Clicking will open PayPal in a new tab.</p>
+                    <!-- Payment Options Grid -->
+                    <div class="aag-payment-grid">
+                        <!-- PayPal Button -->
+                        <div class="aag-payment-method">
+                            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
+                                target="_blank" class="button button-primary button-hero aag-btn-paypal">
+                                <span class="aag-btn-icon">
+                                    <img src="<?php echo plugin_dir_url(dirname(__FILE__)) . 'assets/icons/paypal.svg'; ?>"
+                                        width="20" height="20" alt="PayPal">
+                                </span>
+                                PayPal Checkout
+                            </a>
+                            <p class="description">Global customers ($29)</p>
+                        </div>
+
+                        <!-- UPI Button (Mobile Only) / QR (Desktop) -->
+                        <div class="aag-payment-method upi-method">
+                            <a href="upi://pay?pa=sushilmohan98-1@okhdfcbank&pn=Sushil%20Mohan&am=2400&cu=INR&tn=Auto%20Article%20Generator"
+                                class="button button-secondary button-hero upi-pay-btn aag-btn-gpay">
+                                <span class="aag-btn-icon">
+                                    <img src="<?php echo plugin_dir_url(dirname(__FILE__)) . 'assets/icons/gpay.svg'; ?>"
+                                        width="20" height="20" alt="Google Pay">
+                                </span>
+                                Pay via Google Pay
+                            </a>
+                            <div class="upi-qr-code">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=sushilmohan98-1@okhdfcbank%26pn=Sushil%20Mohan%26am=2400%26cu=INR%26tn=Auto%20Article%20Generator"
+                                    alt="UPI QR Code">
+                            </div>
+                            <p class="description">Indian users (GPay, Paytm, etc.)</p>
+                        </div>
                     </div>
+
+                    <div class="aag-upi-claim-section" style="margin-top: 30px; display: none;"
+                        id="upi-claim-form-container">
+                        <h4>Step 2: Submit your Transaction Details</h4>
+                        <p>After paying, enter your Transaction ID (UTR) below to receive your key.</p>
+                        <form id="aag-upi-claim-form">
+                            <div style="display:grid; gap:10px; max-width:400px;">
+                                <input type="text" name="upi_email" placeholder="Your Email Address" required>
+                                <input type="text" name="upi_utr" placeholder="Transaction ID / UTR (12 digits)" required>
+                                <button type="submit" class="button button-primary">Submit for Verification</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <p style="margin-top: 20px; text-align: center;">
+                        <a href="#" id="toggle-upi-claim">Already paid via UPI? Submit Transaction ID</a>
+                    </p>
+
+                    <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px;">
+                        Need Help? Contact support: <strong>product.utube@gmail.com</strong>
+                    </p>
 
                     <hr style="margin: 30px 0;">
 

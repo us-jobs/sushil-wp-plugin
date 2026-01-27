@@ -41,24 +41,41 @@
 
 /* License Tab Custom Style */
 .aag-tab-btn[data-tab="license"] {
-    background: #ff4c4c !important;
-    /* Bright Red-Orange */
+    background: #6d54e3 !important;
+    /* Premium Purple */
     color: #ffffff !important;
     border-radius: 4px 4px 0 0;
     font-weight: 800 !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 -2px 5px rgba(255, 76, 76, 0.3);
+    box-shadow: 0 -2px 5px rgba(109, 84, 227, 0.3);
 }
 
 .aag-tab-btn[data-tab="license"]:hover {
-    background: #e63939 !important;
+    background: #5a42c9 !important;
     color: #ffffff !important;
 }
 
 .aag-tab-btn[data-tab="license"].active {
     background: #ffffff !important;
-    color: #ff4c4c !important;
-    border-bottom: 4px solid #ff4c4c !important;
+    color: #6d54e3 !important;
+    border-bottom: 4px solid #6d54e3 !important;
+}
+
+/* Premium State Styling */
+.aag-tab-btn[data-tab="license"].is-premium-tab {
+    background: #28a745 !important;
+    /* Green */
+    box-shadow: 0 -2px 5px rgba(40, 167, 69, 0.3);
+}
+
+.aag-tab-btn[data-tab="license"].is-premium-tab:hover {
+    background: #218838 !important;
+}
+
+.aag-tab-btn[data-tab="license"].is-premium-tab.active {
+    background: #ffffff !important;
+    color: #28a745 !important;
+    border-bottom: 4px solid #28a745 !important;
 }
 
 .aag-tab-content {
@@ -408,4 +425,116 @@
     padding: 5px 10px;
     cursor: pointer;
     margin: 10px 0;
+}
+
+/* Payment Options */
+.aag-payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 25px 0;
+}
+
+.aag-payment-method {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.aag-payment-method:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+.aag-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.aag-btn-icon svg {
+    margin-bottom: 2px;
+}
+
+/* PayPal Button Premium Style */
+.aag-btn-paypal {
+    background: #0070ba !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0 25px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+    font-weight: 600 !important;
+    border-radius: 23px !important;
+    /* Pill shape like PayPal */
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.aag-btn-paypal:hover {
+    background: #005ea6 !important;
+}
+
+/* GPay Button Premium Style */
+.aag-btn-gpay {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0 25px !important;
+    height: 46px !important;
+    line-height: 46px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.aag-btn-gpay:hover {
+    background: #222222 !important;
+}
+
+.upi-qr-code {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+}
+
+.upi-qr-code img {
+    display: block;
+    max-width: 140px;
+}
+
+.upi-qr-code p {
+    margin: 10px 0 0;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.aag-upi-claim-section {
+    background: #f1f5f9;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+    .aag-payment-grid {
+        grid-template-columns: 1fr;
+    }
 }

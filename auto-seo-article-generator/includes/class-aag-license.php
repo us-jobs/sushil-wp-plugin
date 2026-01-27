@@ -13,6 +13,7 @@ class AAG_License
     {
         add_action('wp_ajax_aag_activate_license', array($this, 'activate_license_ajax'));
         add_action('wp_ajax_aag_deactivate_license', array($this, 'deactivate_license_ajax'));
+        add_action('wp_ajax_aag_submit_upi_claim', array($this, 'submit_upi_claim_ajax'));
     }
 
     public function is_premium()
@@ -81,5 +82,45 @@ class AAG_License
         delete_option($this->license_status_option);
 
         wp_send_json_success('License deactivated.');
+    }
+
+    /**
+     * Handle UPI Claim Submission
+     */
+    public function submit_upi_claim_ajax()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+
+        $email = sanitize_email($_POST['email']);
+        $utr = sanitize_text_field($_POST['utr']);
+        $domain = $_SERVER['HTTP_HOST'];
+
+        if (empty($email) || empty($utr)) {
+            wp_send_json_error('Please provide both email and Transaction ID (UTR).');
+        }
+
+        // Send to Remote Server for notification
+        $remote_url = 'https://thefashionmart.org/aag-server/upi_handler.php';
+        $response = wp_remote_post($remote_url, array(
+            'body' => array(
+                'email' => $email,
+                'utr' => $utr,
+                'domain' => $domain
+            )
+        ));
+
+        if (is_wp_error($response)) {
+            wp_send_json_error('Connection failed. Please try again later.');
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if ($data && isset($data['success']) && $data['success']) {
+            wp_send_json_success('Request submitted! SUSHIL will verify and send your key to ' . $email . ' within 24 hours.');
+        } else {
+            $msg = isset($data['message']) ? $data['message'] : 'Failed to submit request.';
+            wp_send_json_error($msg);
+        }
     }
 }

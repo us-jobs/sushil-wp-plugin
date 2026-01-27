@@ -21,6 +21,7 @@ class AAG_Generator
         add_action('wp_ajax_aag_process_queue', array($this, 'process_queue_item'));
         add_action('wp_ajax_aag_get_queue_status', array($this, 'get_queue_status'));
         add_action('wp_ajax_aag_clear_queue', array($this, 'clear_queue'));
+        add_action('wp_ajax_aag_delete_queue_item', array($this, 'delete_queue_item'));
         add_action('aag_scheduled_generation', array($this, 'run_scheduled_generation'));
         add_filter('cron_schedules', array($this, 'add_custom_intervals'));
 
@@ -144,6 +145,7 @@ class AAG_Generator
 
         $prompt .= " Speak directly to the reader using \"you\" language throughout the article.";
         $prompt .= " Make it informative and engaging. Use proper HTML formatting with <h2>, <h3>, <p>, <ul>, <li>, <table>, and <strong> tags where appropriate.";
+        $prompt .= " IMPORTANT: Do NOT include the article title as an <h1> heading at the beginning. Start directly with the introduction.";
 
         $content = $this->call_gemini_api($prompt, $gemini_api_key, 500);
 
@@ -831,8 +833,31 @@ class AAG_Generator
 
         global $wpdb;
         $wpdb->query("DELETE FROM {$this->table_name}");
-
         wp_send_json_success('Queue cleared successfully');
+    }
+
+    public function delete_queue_item()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+        if ($id <= 0) {
+            wp_send_json_error('Invalid ID');
+        }
+
+        global $wpdb;
+        $deleted = $wpdb->delete($this->table_name, array('id' => $id));
+
+        if ($deleted) {
+            wp_send_json_success('Item deleted successfully');
+        } else {
+            wp_send_json_error('Failed to delete item or item not found');
+        }
     }
 
     public function call_gemini_api($prompt, $api_key, $min_length = 100)
@@ -866,15 +891,27 @@ class AAG_Generator
             return $response;
         }
 
+        $response_code = wp_remote_retrieve_response_code($response);
         $response_body = wp_remote_retrieve_body($response);
         $result = json_decode($response_body, true);
 
         // Debug logging
-        error_log('AAG: Gemini Response: ' . print_r($result, true));
+        error_log('AAG: Gemini Response (Code: ' . $response_code . '): ' . print_r($result, true));
+
+        // Check for Quota Exceeded (HTTP 429)
+        if ($response_code === 429) {
+            return new WP_Error('quota_exceeded', 'Gemini API Daily Quota Exceeded. Please try again tomorrow or use a different API key.');
+        }
 
         // Check for API errors
         if (isset($result['error'])) {
             $error_msg = isset($result['error']['message']) ? $result['error']['message'] : 'Unknown Gemini API Error';
+            $error_status = isset($result['error']['status']) ? $result['error']['status'] : '';
+
+            if ($error_status === 'RESOURCE_EXHAUSTED') {
+                return new WP_Error('quota_exceeded', 'Gemini API Daily Quota Exceeded. Please try again tomorrow or use a different API key.');
+            }
+
             return new WP_Error('api_error', 'Gemini API Error: ' . $error_msg);
         }
 
@@ -903,6 +940,8 @@ class AAG_Generator
 
     public function get_freepik_image($search_query, $api_key)
     {
+        $this->aag_debug_log("Freepik: Searching for '$search_query'");
+
         $url = "https://api.freepik.com/v1/resources?term=" . urlencode($search_query) . "&limit=1";
 
         $response = wp_remote_get($url, array(
@@ -914,16 +953,33 @@ class AAG_Generator
         ));
 
         if (is_wp_error($response)) {
+            $this->aag_debug_log("Freepik: API Request Failed: " . $response->get_error_message());
             return $response;
         }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $response_code = wp_remote_retrieve_response_code($response);
+        $body_raw = wp_remote_retrieve_body($response);
+        $body = json_decode($body_raw, true);
 
-        if (empty($body['data']) || !isset($body['data'][0]['image']['url'])) {
+        if ($response_code !== 200) {
+            $this->aag_debug_log("Freepik: API error (Code: $response_code): " . $body_raw);
+            return new WP_Error('freepik_error', 'Freepik API error: ' . $response_code);
+        }
+
+        // Try both paths as they might vary by API version/resource type
+        $image_url = null;
+        if (!empty($body['data'][0]['image']['source']['url'])) {
+            $image_url = $body['data'][0]['image']['source']['url'];
+        } elseif (!empty($body['data'][0]['image']['url'])) {
+            $image_url = $body['data'][0]['image']['url'];
+        }
+
+        if (!$image_url) {
+            $this->aag_debug_log("Freepik: No image URL found in response: " . substr($body_raw, 0, 500));
             return new WP_Error('no_image', 'No images found from Freepik');
         }
 
-        $image_url = $body['data'][0]['image']['url'];
+        $this->aag_debug_log("Freepik: Image URL found: $image_url");
 
         // Download image to WordPress media library
         require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -933,21 +989,24 @@ class AAG_Generator
         $tmp = download_url($image_url);
 
         if (is_wp_error($tmp)) {
+            $this->aag_debug_log("Freepik: Download Failed: " . $tmp->get_error_message());
             return $tmp;
         }
 
         $file_array = array(
-            'name' => basename($image_url) . '.jpg',
+            'name' => 'freepik-' . time() . '.jpg',
             'tmp_name' => $tmp
         );
 
         $image_id = media_handle_sideload($file_array, 0);
 
         if (is_wp_error($image_id)) {
+            $this->aag_debug_log("Freepik: Sideload Failed: " . $image_id->get_error_message());
             @unlink($file_array['tmp_name']);
             return $image_id;
         }
 
+        $this->aag_debug_log("Freepik: Successfully attached image ID $image_id");
         return $image_id;
     }
 }

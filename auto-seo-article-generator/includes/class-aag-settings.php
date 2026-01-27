@@ -22,6 +22,7 @@ class AAG_Settings
         add_action('wp_ajax_aag_save_method1', array($this, 'save_method1'));
         add_action('wp_ajax_aag_save_method2', array($this, 'save_method2'));
         add_action('wp_ajax_aag_save_requirements', array($this, 'save_requirements'));
+        add_action('wp_ajax_aag_test_freepik', array($this, 'test_freepik'));
     }
 
     public function add_admin_menu()
@@ -44,7 +45,7 @@ class AAG_Settings
         }
 
         // Updated paths for assets
-        wp_enqueue_style('aag-admin-style', plugin_dir_url(dirname(__FILE__)) . 'assets/css/admin.css', array(), '1.3.0');
+        wp_enqueue_style('aag-admin-style', plugin_dir_url(dirname(__FILE__)) . 'assets/css/admin.css', array(), '1.6.0');
         wp_enqueue_script('aag-admin-script', plugin_dir_url(dirname(__FILE__)) . 'assets/js/admin.js', array('jquery'), time(), true);
 
         wp_localize_script('aag-admin-script', 'aagAjax', array(
@@ -176,7 +177,7 @@ class AAG_Settings
             set_time_limit(300); // 5 minutes
 
             // Check trial and limits
-            if (!$this->generator->is_trial_active()) {
+            if (!$this->license->is_premium() && !$this->generator->is_trial_active()) {
                 wp_send_json_error('Your trial has expired. Please upgrade to continue.');
                 return;
             }
@@ -305,5 +306,27 @@ class AAG_Settings
         update_option('aag_article_tone_auto', isset($_POST['article_tone_auto']) ? '1' : '0');
 
         wp_send_json_success('Article Requirements saved successfully!');
+    }
+
+    public function test_freepik()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
+        if (empty($api_key)) {
+            wp_send_json_error('Please enter an API key first.');
+        }
+
+        // Use a generic search term for testing
+        $result = $this->generator->get_freepik_image('Business Technology', $api_key);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+
+        wp_send_json_success('Connection Successful! Image found and downloaded (ID: ' . $result . '). You can check your Media Library.');
     }
 }

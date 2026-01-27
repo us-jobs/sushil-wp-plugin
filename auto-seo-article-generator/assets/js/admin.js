@@ -409,6 +409,44 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Test Freepik Connection
+    $('#aag-test-freepik-btn').on('click', function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const $result = $('#freepik-test-result');
+        const apiKey = $('#freepik_api_key').val().trim();
+
+        if (!apiKey) {
+            $result.text('Please enter an API key first.').css('color', 'red');
+            return;
+        }
+
+        $btn.prop('disabled', true).text('Testing...');
+        $result.text(' Connecting to Freepik...').css('color', '#666');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_test_freepik',
+                nonce: aagAjax.nonce,
+                api_key: apiKey
+            },
+            success: function (response) {
+                $btn.prop('disabled', false).text('Test Connection');
+                if (response.success) {
+                    $result.text(' ✅ ' + response.data).css('color', 'green');
+                } else {
+                    $result.text(' ❌ ' + response.data).css('color', 'red');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Test Connection');
+                $result.text(' ❌ Request failed.').css('color', 'red');
+            }
+        });
+    });
+
     // Process queue
     $('#process-queue-btn').on('click', function (e) {
         e.preventDefault();
@@ -474,14 +512,64 @@ jQuery(document).ready(function ($) {
             nonce: aagAjax.nonce
         };
 
+        const btn = $(this);
+        btn.prop('disabled', true).text('Clearing...');
+
         $.post(aagAjax.ajax_url, data, function (response) {
-            console.log('AAG: Clear queue response:', response);
+            btn.prop('disabled', false).text('Clear All Queue');
             if (response.success) {
                 showMessage(response.data, 'success');
                 refreshQueue();
             } else {
-                showMessage('Error: ' + response.data, 'error');
+                showMessage(response.data || 'Error clearing queue', 'error');
             }
+        }).fail(function () {
+            btn.prop('disabled', false).text('Clear All Queue');
+            showMessage('Connection error', 'error');
+        });
+    });
+
+    // Delete single queue item
+    $(document).on('click', '.aag-delete-item-btn', function (e) {
+        e.preventDefault();
+
+        if (!confirm('Are you sure you want to delete this article?')) {
+            return;
+        }
+
+        const btn = $(this);
+        const id = btn.data('id');
+
+        // Initial visual feedback
+        btn.prop('disabled', true);
+        const originalHtml = btn.html();
+        btn.html('<span class="dashicons dashicons-update" style="animation: spin 2s linear infinite;"></span>');
+
+        const data = {
+            action: 'aag_delete_queue_item',
+            nonce: aagAjax.nonce,
+            id: id
+        };
+
+        $.post(aagAjax.ajax_url, data, function (response) {
+            if (response.success) {
+                // Remove row immediately for snappy feel, then refresh to be sure
+                btn.closest('tr').fadeOut(300, function () {
+                    $(this).remove();
+                    // Update count locally if possible, or just wait for refresh
+                    const currentCount = parseInt($('#pending-count').text()) || 0;
+                    if (currentCount > 0) $('#pending-count').text(currentCount - 1);
+                });
+                showMessage(response.data, 'success');
+                // Optional: refreshQueue() to ensure consistency if needed
+                // refreshQueue(); 
+            } else {
+                showMessage(response.data || 'Error deleting item', 'error');
+                btn.prop('disabled', false).html(originalHtml);
+            }
+        }).fail(function () {
+            showMessage('Connection error', 'error');
+            btn.prop('disabled', false).html(originalHtml);
         });
     });
 
@@ -562,7 +650,7 @@ jQuery(document).ready(function ($) {
         tbody.empty();
 
         if (items.length === 0) {
-            tbody.append('<tr><td colspan="7" style="text-align:center;">No items in queue</td></tr>');
+            tbody.append('<tr><td colspan="8" style="text-align:center;">No items in queue</td></tr>');
             return;
         }
 
@@ -586,6 +674,11 @@ jQuery(document).ready(function ($) {
                 }
             }
 
+            let actionHtml = '-';
+            if (item.status === 'pending') {
+                actionHtml = '<button class="button button-small aag-delete-item-btn" data-id="' + item.id + '" title="Delete Article"><span class="dashicons dashicons-trash" style="line-height: 1.3;"></span></button>';
+            }
+
             tbody.append(
                 '<tr>' +
                 '<td>' + item.id + '</td>' +
@@ -597,6 +690,7 @@ jQuery(document).ready(function ($) {
                 '</span></td>' +
                 '<td>' + scheduledInfo + '</td>' +
                 '<td>' + postLink + '</td>' +
+                '<td>' + actionHtml + '</td>' +
                 '</tr>'
             );
         });
@@ -660,6 +754,46 @@ jQuery(document).ready(function ($) {
         };
         return text.replace(/[&<>"']/g, function (m) { return map[m]; });
     }
+
+    // Toggle UPI Claim Form
+    $('#toggle-upi-claim').on('click', function (e) {
+        e.preventDefault();
+        $('#upi-claim-form-container').slideToggle();
+        $(this).hide();
+    });
+
+    // Handle UPI Claim Submission
+    $('#aag-upi-claim-form').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type="submit"]');
+        const originalText = $btn.html();
+
+        const email = $form.find('input[name="upi_email"]').val().trim();
+        const utr = $form.find('input[name="upi_utr"]').val().trim();
+
+        if (utr.length < 10) {
+            showMessage('Error: Please enter a valid 12-digit UTR number.', 'error');
+            return;
+        }
+
+        $btn.prop('disabled', true).html('Submitting...');
+
+        $.post(aagAjax.ajax_url, {
+            action: 'aag_submit_upi_claim',
+            nonce: aagAjax.nonce,
+            email: email,
+            utr: utr
+        }, function (response) {
+            $btn.prop('disabled', false).html(originalText);
+            if (response.success) {
+                showMessage(response.data, 'success');
+                $form.closest('.aag-upi-claim-section').html('<h3>✅ Claim Submitted</h3><p>' + response.data + '</p>');
+            } else {
+                showMessage(response.data, 'error');
+            }
+        });
+    });
 
     // Initialize queue refresh on page load
     setTimeout(function () {
