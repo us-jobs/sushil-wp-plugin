@@ -160,18 +160,25 @@ class AAG_Generator
 
         $prompt .= " Speak directly to the reader using \"you\" language throughout the article.";
         $prompt .= " Make it informative and engaging. Use proper HTML formatting with <h2>, <h3>, <p>, <ul>, <li>, <table>, and <strong> tags where appropriate.";
+        $prompt .= " IMPORTANT: Keep paragraphs very short. Maximum 3 sentences per paragraph for better readability.";
         $prompt .= " IMPORTANT: Do NOT use Markdown symbols like **bold** or *italic*. Use <strong> and <em> HTML tags instead.";
         $prompt .= " IMPORTANT: Do NOT include the article title as an <h1> heading at the beginning. Start directly with the introduction.";
 
         $content = $this->call_gemini_api($prompt, $gemini_api_key, 500);
 
-        // Strip markdown code blocks if present
-        $content = preg_replace('/^```html\s*/i', '', $content);
-        $content = preg_replace('/^```\s*/', '', $content);
+        $content = preg_replace('/^```\s*/i', '', trim($content));
         $content = preg_replace('/```$/', '', $content);
 
         // Safety fallback: Convert any remaining Markdown to HTML
         $content = $this->convert_markdown_to_html($content);
+
+        // Safety fallback: Split any long paragraphs
+        $content = $this->split_long_paragraphs($content);
+
+        // Ensure all tags are properly balanced to prevent UI breaks
+        if (function_exists('force_balance_tags')) {
+            $content = force_balance_tags($content);
+        }
 
         if (is_wp_error($content)) {
             $wpdb->update($this->table_name, array(
@@ -1171,13 +1178,14 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
      */
     private function convert_markdown_to_html($content)
     {
-        // Bold: **text** or __text__ -> <strong>text</strong>
-        $content = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $content);
-        $content = preg_replace('/__(.*?)__/', '<strong>$1</strong>', $content);
+        // Bold: **text** -> <strong>text</strong> (must not span multiple lines)
+        $content = preg_replace('/\*\*([^\n]+?)\*\*/', '<strong>$1</strong>', $content);
+        $content = preg_replace('/__([^\n]+?)__/', '<strong>$1</strong>', $content);
 
-        // Italic: *text* or _text_ -> <em>text</em>
-        $content = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $content);
-        $content = preg_replace('/_(.*?)_/', '<em>$1</em>', $content);
+        // Italic: *text* -> <em>text</em> (avoiding confusion with bullet points at start of line)
+        // Only match if the star is not at the start of a line and isn't followed by a space
+        $content = preg_replace('/(?<![\n\r])\*([^\n\* ]+?)\*/', '<em>$1</em>', $content);
+        $content = preg_replace('/_([^\n_ ]+?)_/', '<em>$1</em>', $content);
 
         // Headings: ### Title -> <h3>Title</h3>
         $content = preg_replace('/^### (.*?)$/m', '<h3>$1</h3>', $content);
@@ -1185,10 +1193,35 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
         $content = preg_replace('/^# (.*?)$/m', '<h1>$1</h1>', $content);
 
         // Unordered Lists: * Item or - Item -> <li>Item</li>
-        // (Note: This is a simple conversion, real list tagging is complex without a parser)
         // Only convert if it's at the start of a line and followed by space
         $content = preg_replace('/^[*-] (.*?)$/m', '<li>$1</li>', $content);
 
         return $content;
+    }
+
+    /**
+     * Splits long paragraphs into smaller ones (max 3 sentences).
+     */
+    private function split_long_paragraphs($content)
+    {
+        // Match content within <p> tags
+        return preg_replace_callback('/<p>(.*?)<\/p>/is', function ($matches) {
+            $inner_text = $matches[1];
+            
+            // Split by sentence endings (., !, ?) followed by a space
+            // This is a basic split, it might miss some niche cases but works for standard text
+            $sentences = preg_split('/(?<=[.!?])\s+/', $inner_text, -1, PREG_SPLIT_NO_EMPTY);
+            
+            if (count($sentences) <= 3) {
+                return "<p>" . $inner_text . "</p>";
+            }
+            
+            $chunks = array_chunk($sentences, 3);
+            $new_paragraphs = array_map(function ($chunk) {
+                return "<p>" . implode(' ', $chunk) . "</p>";
+            }, $chunks);
+            
+            return implode("\n", $new_paragraphs);
+        }, $content);
     }
 }
