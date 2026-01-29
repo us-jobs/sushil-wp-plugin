@@ -160,6 +160,7 @@ class AAG_Generator
 
         $prompt .= " Speak directly to the reader using \"you\" language throughout the article.";
         $prompt .= " Make it informative and engaging. Use proper HTML formatting with <h2>, <h3>, <p>, <ul>, <li>, <table>, and <strong> tags where appropriate.";
+        $prompt .= " IMPORTANT: Do NOT use Markdown symbols like **bold** or *italic*. Use <strong> and <em> HTML tags instead.";
         $prompt .= " IMPORTANT: Do NOT include the article title as an <h1> heading at the beginning. Start directly with the introduction.";
 
         $content = $this->call_gemini_api($prompt, $gemini_api_key, 500);
@@ -168,6 +169,9 @@ class AAG_Generator
         $content = preg_replace('/^```html\s*/i', '', $content);
         $content = preg_replace('/^```\s*/', '', $content);
         $content = preg_replace('/```$/', '', $content);
+
+        // Safety fallback: Convert any remaining Markdown to HTML
+        $content = $this->convert_markdown_to_html($content);
 
         if (is_wp_error($content)) {
             $wpdb->update($this->table_name, array(
@@ -1159,6 +1163,32 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
             return trim($result['candidates'][0]['content']['parts'][0]['text']);
         }
 
-        return new WP_Error('api_error', 'Failed to generate content from Gemini Vision API.');
+    }
+
+    /**
+     * Converts common Markdown formatting to HTML.
+     * Used as a fallback if the AI returns Markdown instead of pure HTML.
+     */
+    private function convert_markdown_to_html($content)
+    {
+        // Bold: **text** or __text__ -> <strong>text</strong>
+        $content = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $content);
+        $content = preg_replace('/__(.*?)__/', '<strong>$1</strong>', $content);
+
+        // Italic: *text* or _text_ -> <em>text</em>
+        $content = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $content);
+        $content = preg_replace('/_(.*?)_/', '<em>$1</em>', $content);
+
+        // Headings: ### Title -> <h3>Title</h3>
+        $content = preg_replace('/^### (.*?)$/m', '<h3>$1</h3>', $content);
+        $content = preg_replace('/^## (.*?)$/m', '<h2>$1</h2>', $content);
+        $content = preg_replace('/^# (.*?)$/m', '<h1>$1</h1>', $content);
+
+        // Unordered Lists: * Item or - Item -> <li>Item</li>
+        // (Note: This is a simple conversion, real list tagging is complex without a parser)
+        // Only convert if it's at the start of a line and followed by space
+        $content = preg_replace('/^[*-] (.*?)$/m', '<li>$1</li>', $content);
+
+        return $content;
     }
 }
