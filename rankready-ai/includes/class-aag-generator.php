@@ -123,6 +123,7 @@ class AAG_Generator
         $include_table = get_option('aag_include_table', '1');
         $include_lists = get_option('aag_include_lists', '1');
         $include_faq = get_option('aag_include_faq', '0');
+        $include_youtube = get_option('aag_include_youtube', '0');
         $article_tone = get_option('aag_article_tone', 'neutral');
         $article_tone_auto = get_option('aag_article_tone_auto', '0');
 
@@ -140,6 +141,10 @@ class AAG_Generator
 
         if ($include_faq === '1') {
             $prompt .= " Add a Frequently Asked Questions (FAQ) section at the end.";
+        }
+
+        if ($include_youtube === '1') {
+            $prompt .= " Find a relevant, high-quality YouTube video that complements this topic. Include a responsive <iframe> embed code for the video. Place the video embed in a suitable section of the article where it adds the most value (e.g., after an introduction or a key section). Use width=\"100%\" and a standard height for the iframe.";
         }
 
         if ($article_tone_auto === '1') {
@@ -899,7 +904,7 @@ class AAG_Generator
 
     public function call_gemini_api($prompt, $api_key, $min_length = 100)
     {
-        // Use the stable 1.5-flash model
+        // Use the stable 1.5-flash modelgemini-2.5
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$api_key}";
 
         $body = json_encode(array(
@@ -1128,7 +1133,7 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
         $image_data = base64_encode(file_get_contents($image_path));
         $mime_type = wp_check_filetype($image_path)['type'] ?: 'image/jpeg';
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$api_key}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$api_key}";
 
         $body = json_encode(array(
             'contents' => array(

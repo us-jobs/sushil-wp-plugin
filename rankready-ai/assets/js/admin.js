@@ -199,6 +199,160 @@ jQuery(document).ready(function ($) {
         showMessage('Bulk processing complete!', 'success');
     });
 
+    // --- Content Refresher (Update OLD articles) Section ---
+
+    // Scan for old articles
+    $(document).on('click', '#aag-scan-old-articles-btn', function (e) {
+        e.preventDefault();
+        console.log('AAG: Scan Old Articles button clicked');
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update aag-spin" style="margin-top: 4px;"></span> Scanning...');
+        $('#aag-refresher-results').hide();
+        $('#aag-refresher-suggestions-box').hide();
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_scan_old_articles',
+                nonce: aagAjax.nonce
+            },
+            success: function (response) {
+                $btn.prop('disabled', false).html(originalHtml);
+                if (response.success) {
+                    const articles = response.data.articles || [];
+                    const $tbody = $('#aag-refresher-table-body');
+                    $tbody.empty();
+
+                    if (articles.length === 0) {
+                        $('#aag-refresher-empty-state h3').text('No Old Articles Found');
+                        $('#aag-refresher-empty-state p').text('All your generated articles are fresh (less than 30 days old).');
+                        $('#aag-refresher-empty-state').show();
+                    } else {
+                        articles.forEach(function (article) {
+                            $tbody.append(`
+                                <tr>
+                                    <td><strong>${article.title}</strong></td>
+                                    <td>${article.post_date}</td>
+                                    <td>
+                                        <button class="button button-small aag-get-suggestions-btn" data-id="${article.post_id}" data-title="${article.title}">
+                                            Get Suggestions
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                        $('#aag-refresher-empty-state').hide();
+                        $('#aag-refresher-results').fadeIn();
+                    }
+                } else {
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).html(originalHtml);
+                showMessage('Connection error during scan.', 'error');
+            }
+        });
+    });
+
+    // Get suggestions for a specific article
+    $(document).on('click', '.aag-get-suggestions-btn', function () {
+        const $btn = $(this);
+        const postId = $btn.data('id');
+        const title = $btn.data('title');
+
+        $btn.prop('disabled', true).text('Analyzing...');
+        $('#aag-refresher-suggestions-box').hide();
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_get_refresher_suggestions',
+                nonce: aagAjax.nonce,
+                post_id: postId
+            },
+            success: function (response) {
+                $btn.prop('disabled', false).text('Get Suggestions');
+                if (response.success) {
+                    const suggestions = response.data.suggestions || [];
+                    $('#aag-refresher-target-title').text(`Update Suggestions for: ${title}`);
+                    const $content = $('#aag-refresher-suggestions-content');
+                    $content.empty();
+
+                    if (suggestions.length === 0) {
+                        $content.append('<p>No suggestions found. The article seems well-optimized.</p>');
+                    } else {
+                        suggestions.forEach(function (s) {
+                            $content.append(`
+                                <div class="aag-suggestion-item" style="margin-bottom: 20px; padding: 20px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex-grow: 1; padding-right: 20px;">
+                                        <h4 style="margin-top: 0; color: #1e3a8a; font-size: 16px;">${s.title}</h4>
+                                        <p style="margin-bottom: 0; color: #4b5563; line-height: 1.5;">${s.description}</p>
+                                    </div>
+                                    <button class="button button-secondary aag-apply-suggestion-btn" 
+                                            data-id="${postId}" 
+                                            data-title="${s.title}" 
+                                            data-desc="${s.description}">
+                                        Apply This Update
+                                    </button>
+                                </div>
+                            `);
+                        });
+                    }
+                    $('#aag-refresher-suggestions-box').fadeIn();
+                    $('html, body').animate({
+                        scrollTop: $("#aag-refresher-suggestions-box").offset().top - 100
+                    }, 500);
+                } else {
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Get Suggestions');
+                showMessage('Connection error.', 'error');
+            }
+        });
+    });
+
+    // Apply a specific suggestion
+    $(document).on('click', '.aag-apply-suggestion-btn', function () {
+        const $btn = $(this);
+        const postId = $btn.data('id');
+        const title = $btn.data('title');
+        const desc = $btn.data('desc');
+
+        $btn.prop('disabled', true).text('Applying...');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_apply_refresher_suggestion',
+                nonce: aagAjax.nonce,
+                post_id: postId,
+                suggestion_title: title,
+                suggestion_description: desc
+            },
+            success: function (response) {
+                if (response.success) {
+                    $btn.removeClass('button-secondary').addClass('button-disabled').text('✅ Applied').prop('disabled', true);
+                    showMessage(response.data, 'success');
+                } else {
+                    $btn.prop('disabled', false).text('Apply This Update');
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Apply This Update');
+                showMessage('Connection error.', 'error');
+            }
+        });
+    });
+
     // --- Content Gap Analyzer Section ---
 
     // Add another URL field
@@ -697,6 +851,7 @@ jQuery(document).ready(function ($) {
         const includeTable = $('input[name="include_table"]').is(':checked');
         const includeLists = $('input[name="include_lists"]').is(':checked');
         const includeFaq = $('input[name="include_faq"]').is(':checked');
+        const includeYoutube = $('input[name="include_youtube"]').is(':checked');
         const articleTone = $('#article_tone').val();
         const articleToneAuto = $('#article_tone_auto').is(':checked');
 
@@ -709,6 +864,7 @@ jQuery(document).ready(function ($) {
             include_table: includeTable,
             include_lists: includeLists,
             include_faq: includeFaq,
+            include_youtube: includeYoutube,
             article_tone: articleTone,
             article_tone_auto: articleToneAuto ? 1 : 0
         };

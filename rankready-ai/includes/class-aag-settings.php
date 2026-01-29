@@ -8,11 +8,13 @@ class AAG_Settings
 {
     private $generator;
     private $license;
+    private $refresher;
 
-    public function __construct($generator, $license)
+    public function __construct($generator, $license, $refresher = null)
     {
         $this->generator = $generator;
         $this->license = $license;
+        $this->refresher = $refresher;
 
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
@@ -23,6 +25,11 @@ class AAG_Settings
         add_action('wp_ajax_aag_save_method2', array($this, 'save_method2'));
         add_action('wp_ajax_aag_save_requirements', array($this, 'save_requirements'));
         add_action('wp_ajax_aag_test_freepik', array($this, 'test_freepik'));
+
+        // Refresher actions
+        add_action('wp_ajax_aag_scan_old_articles', array($this, 'scan_old_articles'));
+        add_action('wp_ajax_aag_get_refresher_suggestions', array($this, 'get_refresher_suggestions'));
+        add_action('wp_ajax_aag_apply_refresher_suggestion', array($this, 'aag_apply_refresher_suggestion'));
     }
 
     public function add_admin_menu()
@@ -292,6 +299,7 @@ class AAG_Settings
         update_option('aag_include_table', isset($_POST['include_table']) ? '1' : '0');
         update_option('aag_include_lists', isset($_POST['include_lists']) ? '1' : '0');
         update_option('aag_include_faq', isset($_POST['include_faq']) ? '1' : '0');
+        update_option('aag_include_youtube', isset($_POST['include_youtube']) ? '1' : '0');
         if (isset($_POST['article_tone'])) {
             update_option('aag_article_tone', sanitize_text_field($_POST['article_tone']));
         }
@@ -320,5 +328,67 @@ class AAG_Settings
         }
 
         wp_send_json_success('Connection Successful! Image found and Test Image downloaded (ID: ' . $result . '). Delete the test image from your Media Library.');
+    }
+
+    public function scan_old_articles()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        if (!$this->refresher) {
+            wp_send_json_error('Refresher not initialized.');
+        }
+
+        $articles = $this->refresher->scan_old_articles(30); // Default 30 days
+        wp_send_json_success(array('articles' => $articles));
+    }
+
+    public function get_refresher_suggestions()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $post_id = intval($_POST['post_id']);
+        if (!$post_id) {
+            wp_send_json_error('Invalid Post ID.');
+        }
+
+        if (!$this->refresher) {
+            wp_send_json_error('Refresher not initialized.');
+        }
+
+        $suggestions = $this->refresher->get_update_suggestions($post_id);
+        if (is_wp_error($suggestions)) {
+            wp_send_json_error($suggestions->get_error_message());
+        }
+
+        wp_send_json_success(array('suggestions' => $suggestions));
+    }
+
+    public function aag_apply_refresher_suggestion()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $post_id = intval($_POST['post_id']);
+        $title = sanitize_text_field($_POST['suggestion_title']);
+        $desc = sanitize_textarea_field($_POST['suggestion_description']);
+
+        if (!$this->refresher) {
+            wp_send_json_error('Refresher not initialized.');
+        }
+
+        $result = $this->refresher->apply_suggestion($post_id, $title, $desc);
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+
+        wp_send_json_success('Suggestion applied successfully! Article updated.');
     }
 }
