@@ -1050,6 +1050,9 @@ class AAG_Generator
                 'ID' => $image_id,
                 'post_title' => $item_title
             ));
+
+            // Set the ALT text to the item title as a sensible default
+            update_post_meta($image_id, '_wp_attachment_image_alt', $item_title);
         }
 
         $this->aag_debug_log("Freepik: Successfully attached image ID $image_id");
@@ -1105,8 +1108,10 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
                 wp_update_post($update_data);
             }
 
-            if (!empty($alt)) {
-                update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt);
+            // Always update ALT text if we have it, prioritizing the 'alt' key
+            $final_alt = !empty($alt) ? $alt : (!empty($title) ? $title : '');
+            if (!empty($final_alt)) {
+                update_post_meta($attachment_id, '_wp_attachment_image_alt', $final_alt);
             }
         }
     }
@@ -1207,20 +1212,20 @@ Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other
         // Match content within <p> tags
         return preg_replace_callback('/<p>(.*?)<\/p>/is', function ($matches) {
             $inner_text = $matches[1];
-            
+
             // Split by sentence endings (., !, ?) followed by a space
             // This is a basic split, it might miss some niche cases but works for standard text
             $sentences = preg_split('/(?<=[.!?])\s+/', $inner_text, -1, PREG_SPLIT_NO_EMPTY);
-            
+
             if (count($sentences) <= 3) {
                 return "<p>" . $inner_text . "</p>";
             }
-            
+
             $chunks = array_chunk($sentences, 3);
             $new_paragraphs = array_map(function ($chunk) {
                 return "<p>" . implode(' ', $chunk) . "</p>";
             }, $chunks);
-            
+
             return implode("\n", $new_paragraphs);
         }, $content);
     }
