@@ -505,7 +505,9 @@
             <span class="dashicons dashicons-no-alt"></span>
         </div>
         <div class="aag-modal-content">
-            <h2>License & Upgrade</h2>
+            <h2>License & Upgrade
+                <div class="aag-price-tag highlighted">$29 / one-time</div>
+            </h2>
 
             <?php if ($is_premium): ?>
                 <div class="aag-premium-box active">
@@ -514,15 +516,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                    <?php
-                                    if (!empty($license_key) && strlen($license_key) > 8) {
-                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                        echo esc_html($masked_key);
-                                    } else {
-                                        echo '********';
-                                    }
-                                    ?>
-                                </code>
+                                                    <?php
+                                                    if (!empty($license_key) && strlen($license_key) > 8) {
+                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                        echo esc_html($masked_key);
+                                                    } else {
+                                                        echo '********';
+                                                    }
+                                                    ?>
+                                                </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>
@@ -537,13 +539,11 @@
                     <div class="aag-pricing-box" style="box-shadow: none; border: none; padding: 0;">
                         <h3>Upgrade to Premium</h3>
                         <ul>
-                            <li>Unlimited Article Generation</li>
-                            <li>Remove Daily Limits</li>
-                            <li>Longer Articles (2500+ words)</li>
-                            <li>Priority Support</li>
+                            <li>✅ Unlimited Article Generation</li>
+                            <li>✅ Remove Daily Limits</li>
+                            <li>✅ Longer Articles (2500+ words)</li>
+                            <li>✅ Priority Support</li>
                         </ul>
-                        <div class="aag-price-tag highlighted">$29 / one-time</div>
-
                         <!-- Payment Options Grid -->
                         <div class="aag-payment-grid">
                             <!-- PayPal Button -->

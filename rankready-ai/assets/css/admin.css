@@ -645,15 +645,16 @@
 }
 
 .aag-price-tag.highlighted {
-    font-size: 26px;
+    font-size: 16px;
     font-weight: 900;
-    color: #6236ff;
-    background: #f5f3ff;
-    padding: 10px 24px;
-    border-radius: 50px;
+    color: #000;
+    /* background: #ffeb3b; */
+    /* Bright Yellow */
+    padding: 5px 10px;
+    border-radius: 8px;
     display: inline-block;
     margin: 20px 0;
-    box-shadow: 0 4px 6px rgba(98, 54, 255, 0.1);
-    border: 2px solid #6236ff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #fbc02d;
     text-transform: uppercase;
 }
