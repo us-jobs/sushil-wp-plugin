@@ -602,13 +602,11 @@ jQuery(document).ready(function ($) {
         $submitBtn.prop('disabled', true).html('<span class="dashicons dashicons-update-alt aag-spin"></span> Saving...');
 
         const titles = $('#title_list').val().trim();
-        const keywords = $('#title_keywords').val().trim();
 
         const data = {
             action: 'aag_save_method1',
             nonce: aagAjax.nonce,
-            titles: titles,
-            keywords: keywords
+            titles: titles
         };
 
         showMessage('Saving Title List Source...', 'info');
@@ -1000,7 +998,6 @@ jQuery(document).ready(function ($) {
                 '-';
 
             const createdDate = new Date(item.created_at).toLocaleString();
-            const keywordsToInclude = item.keywords_to_include ? escapeHtml(item.keywords_to_include) : '-';
             const methodLabel = item.keyword ? 'Method 2: Keyword Based' : 'Method 1: Title List';
             const statusLabel = item.status.charAt(0).toUpperCase() + item.status.slice(1) + ' (' + methodLabel + ')';
             const articlesPerRun = parseInt($('#articles_per_run').val(), 10) || 1;
@@ -1024,7 +1021,6 @@ jQuery(document).ready(function ($) {
                 '<td>' + item.id + '</td>' +
                 '<td>' + escapeHtml(item.title) + '</td>' +
                 '<td>' + (item.keyword ? escapeHtml(item.keyword) : '-') + '</td>' +
-                '<td>' + keywordsToInclude + '</td>' +
                 '<td><span class="aag-status-' + item.status + '">' +
                 statusLabel +
                 '</span></td>' +

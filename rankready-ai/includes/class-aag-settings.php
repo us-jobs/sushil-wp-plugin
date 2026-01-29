@@ -153,9 +153,6 @@ class AAG_Settings
         if (isset($_POST['method1_titles'])) {
             update_option('aag_method1_titles', sanitize_textarea_field($_POST['method1_titles']));
         }
-        if (isset($_POST['method1_keywords'])) {
-            update_option('aag_method1_keywords', sanitize_text_field($_POST['method1_keywords']));
-        }
 
         // Save Method 2 Data
         if (isset($_POST['method2_keyword'])) {
@@ -260,7 +257,6 @@ class AAG_Settings
             wp_send_json_error('Unauthorized');
 
         update_option('aag_method1_titles', sanitize_textarea_field($_POST['titles']));
-        update_option('aag_method1_keywords', sanitize_text_field($_POST['keywords']));
 
         $added = $this->generator->enqueue_method1_titles_to_queue();
 

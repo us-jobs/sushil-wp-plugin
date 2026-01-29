@@ -479,7 +479,6 @@ class AAG_Generator
             return 0;
         }
 
-        $keywords = get_option('aag_method1_keywords', '');
         $added = 0;
 
         $count_to_process = ($limit > 0) ? min($limit, count($titles_array)) : count($titles_array);
@@ -505,7 +504,6 @@ class AAG_Generator
 
             $wpdb->insert($this->table_name, array(
                 'title' => $title,
-                'keywords_to_include' => $keywords,
                 'status' => 'pending',
                 'created_at' => current_time('mysql')
             ));

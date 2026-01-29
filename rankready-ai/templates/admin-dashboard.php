@@ -241,20 +241,14 @@
 
     <!-- Method 1 Tab -->
     <div class="aag-tab-content" id="method1-tab">
-        <h2>Method 1: Title List Source</h2>
+        <h2>Method 1: Title List Source <span
+                style="font-weight: normal; font-size: 0.7em; color: #666; margin-left: 10px;">(Article Titles Source
+                (one per line))</span></h2>
         <form id="aag-method1-form">
             <p>
-                <label for="title_list"><strong>Article Titles Source (one per line)</strong></label>
                 <textarea id="title_list" name="title_list" rows="10" class="large-text"
                     placeholder="Enter article titles, one per line..."><?php echo esc_textarea(get_option('aag_method1_titles', '')); ?></textarea>
                 <span class="description">Scheduler will pick titles from this list top-to-bottom.</span>
-            </p>
-            <p>
-                <label for="title_keywords"><strong>Keywords to Include (Optional)</strong></label>
-                <input type="text" id="title_keywords" name="title_keywords" class="regular-text"
-                    value="<?php echo esc_attr(get_option('aag_method1_keywords', '')); ?>"
-                    placeholder="e.g., SEO, WordPress, digital marketing">
-                <span class="description">Common keywords for these articles</span>
             </p>
             <p class="submit">
                 <button type="submit" class="button button-primary">Save Title List</button>
@@ -587,7 +581,6 @@
                     <th>ID</th>
                     <th>Title</th>
                     <th>Keyword</th>
-                    <th>Keywords to Include</th>
                     <th>Status</th>
                     <th>Created</th>
                     <th>Post Link</th>
@@ -597,9 +590,7 @@
             <tbody>
                 <?php if (empty($queue_items)): ?>
                     <tr>
-                    <tr>
-                        <td colspan="8" style="text-align:center;">No items in queue</td>
-                    </tr>
+                        <td colspan="7" style="text-align:center;">No items in queue</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($queue_items as $item): ?>
@@ -607,7 +598,6 @@
                             <td><?php echo esc_html($item->id); ?></td>
                             <td><?php echo esc_html($item->title); ?></td>
                             <td><?php echo esc_html($item->keyword ?: '-'); ?></td>
-                            <td><?php echo esc_html($item->keywords_to_include ?: '-'); ?></td>
                             <td><span
                                     class="aag-status-<?php echo esc_attr($item->status); ?>"><?php echo esc_html(ucfirst($item->status)); ?></span>
                             </td>
@@ -663,15 +653,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                                                            <?php
-                                                                            if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                                echo esc_html($masked_key);
-                                                                            } else {
-                                                                                echo '********';
-                                                                            }
-                                                                            ?>
-                                                                        </code>
+                                                                                        <?php
+                                                                                        if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                                            $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                                            echo esc_html($masked_key);
+                                                                                        } else {
+                                                                                            echo '********';
+                                                                                        }
+                                                                                        ?>
+                                                                                    </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>
