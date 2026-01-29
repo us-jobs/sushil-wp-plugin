@@ -1,3 +1,108 @@
+/* License Modal */
+.aag-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.aag-modal-container {
+    background: #fff;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow-y: auto;
+    animation: aag-modal-fadein 0.3s ease-out;
+}
+
+@keyframes aag-modal-fadein {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.aag-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    cursor: pointer;
+    background: #f1f5f9;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.2s;
+    z-index: 11;
+}
+
+.aag-modal-close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.aag-modal-content {
+    padding: 30px;
+}
+
+/* Header Upgrade Button */
+.aag-header-action {
+    float: right;
+    margin-top: -50px;
+}
+
+.aag-upgrade-trigger-btn {
+    background: #6236ff !important;
+    color: #fff !important;
+    padding: 8px 20px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    border: none !important;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(98, 54, 255, 0.2);
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: auto !important;
+    line-height: normal !important;
+    text-decoration: none !important;
+}
+
+.aag-upgrade-trigger-btn:hover {
+    background: #4f26e3 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(98, 54, 255, 0.3);
+    color: #fff !important;
+}
+
+.aag-upgrade-trigger-btn.is-active-premium {
+    background: #10b981 !important;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.aag-upgrade-trigger-btn.is-active-premium:hover {
+    background: #059669 !important;
+}
+
 .aag-container {
     max-width: 1200px;
     margin: 20px 0;
@@ -542,14 +647,13 @@
 .aag-price-tag.highlighted {
     font-size: 26px;
     font-weight: 900;
-    color: #000;
-    background: #ffeb3b;
-    /* Bright Yellow */
-    padding: 10px 20px;
-    border-radius: 8px;
+    color: #6236ff;
+    background: #f5f3ff;
+    padding: 10px 24px;
+    border-radius: 50px;
     display: inline-block;
     margin: 20px 0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border: 3px solid #fbc02d;
+    box-shadow: 0 4px 6px rgba(98, 54, 255, 0.1);
+    border: 2px solid #6236ff;
     text-transform: uppercase;
 }

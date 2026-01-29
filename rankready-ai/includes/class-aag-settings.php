@@ -44,9 +44,9 @@ class AAG_Settings
             return;
         }
 
-        // Updated paths for assets
-        wp_enqueue_style('aag-admin-style', plugin_dir_url(dirname(__FILE__)) . 'assets/css/admin.css', array(), '1.6.0');
-        wp_enqueue_script('aag-admin-script', plugin_dir_url(dirname(__FILE__)) . 'assets/js/admin.js', array('jquery'), time(), true);
+        // Updated paths for assets using AAG_PLUGIN_URL constant
+        wp_enqueue_style('aag-admin-style', AAG_PLUGIN_URL . 'assets/css/admin.css', array(), '2.0.1');
+        wp_enqueue_script('aag-admin-script', AAG_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '2.0.1', true);
 
         wp_localize_script('aag-admin-script', 'aagAjax', array(
             'ajax_url' => admin_url('admin-ajax.php'),

@@ -20,15 +20,19 @@ define('AAG_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // Include Classes
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-license.php';
+require_once AAG_PLUGIN_DIR . 'includes/class-aag-telemetry.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-generator.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-settings.php';
+require_once AAG_PLUGIN_DIR . 'includes/class-aag-linking.php';
 
 // Initialize Plugin
 function aag_init()
 {
     $license = new AAG_License();
-    $generator = new AAG_Generator($license);
+    $telemetry = new AAG_Telemetry();
+    $generator = new AAG_Generator($license, $telemetry);
     $settings = new AAG_Settings($generator, $license);
+    $linking = new AAG_Linking($generator);
 
     return $generator;
 }

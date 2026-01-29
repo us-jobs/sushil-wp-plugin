@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-    console.log('AAG: Admin script loaded v1.1.0');
+    console.log('AAG: Admin script loaded v2.0.1');
 
     // Tab switching
     $('.aag-tab-btn').on('click', function () {
@@ -99,6 +99,33 @@ jQuery(document).ready(function ($) {
 
     $('#settings_submit_btn').on('click', function () {
         console.log('AAG: Save button clicked');
+    });
+
+    // License Modal Logic
+    const $licenseModal = $('#aag-license-modal');
+    const $modalTrigger = $('#aag-license-modal-trigger');
+    const $modalClose = $('#aag-modal-close-btn');
+
+    $modalTrigger.on('click', function (e) {
+        e.preventDefault();
+        console.log('AAG: Opening license modal');
+        $licenseModal.fadeIn(300).css('display', 'flex');
+    });
+
+    $modalClose.on('click', function () {
+        $licenseModal.fadeOut(300);
+    });
+
+    $(window).on('click', function (e) {
+        if ($(e.target).is($licenseModal)) {
+            $licenseModal.fadeOut(300);
+        }
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && $licenseModal.is(':visible')) {
+            $licenseModal.fadeOut(300);
+        }
     });
 
     $('#aag-settings-form').on('submit', function (e) {

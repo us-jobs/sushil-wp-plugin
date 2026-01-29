@@ -1,5 +1,15 @@
 <div class="wrap aag-container">
     <h1>RankReady AI - Human Like Content Generator</h1>
+    <div class="aag-header-action">
+        <a href="#" class="aag-upgrade-trigger-btn <?php echo $is_premium ? 'is-active-premium' : ''; ?>"
+            id="aag-license-modal-trigger">
+            <?php if ($is_premium): ?>
+                <span class="dashicons dashicons-star-filled"></span> Premium Active
+            <?php else: ?>
+                <span class="dashicons dashicons-admin-network"></span> Upgrade to Premium
+            <?php endif; ?>
+        </a>
+    </div>
     <?php $is_free_tier = !$is_premium && !$trial_active; ?>
 
     <!-- Trial/License Status Banner -->
@@ -49,10 +59,8 @@
         <button class="aag-tab-btn" data-tab="requirements">Article Requirements</button>
         <button class="aag-tab-btn" data-tab="method1">Method 1: Title List</button>
         <button class="aag-tab-btn" data-tab="method2">Method 2: Keyword Based</button>
+        <button class="aag-tab-btn" data-tab="linking">Internal Linking</button>
         <button class="aag-tab-btn" data-tab="queue">Article Status</button>
-        <button class="aag-tab-btn <?php echo $is_premium ? 'is-premium-tab' : ''; ?>" data-tab="license">
-            <?php echo $is_premium ? 'Premium User' : 'License / Upgrade'; ?>
-        </button>
     </div>
 
     <!-- Settings Tab -->
@@ -387,6 +395,33 @@
         </form>
     </div>
 
+    <!-- Internal Linking Tab -->
+    <div class="aag-tab-content" id="linking-tab">
+        <div class="aag-card">
+            <h2>AI Internal Link Builder</h2>
+            <p>This feature helps you maintain a healthy internal link structure by suggesting relevant posts from your
+                site as you write new content.</p>
+
+            <div class="aag-feature-box">
+                <div class="feature-icon"><span class="dashicons dashicons-admin-links"></span></div>
+                <div class="feature-text">
+                    <h3>How it works</h3>
+                    <ul>
+                        <li>Open any post in the WordPress editor.</li>
+                        <li>Look for the <strong>RankReady AI Linking</strong> sidebar icon on the top right.</li>
+                        <li>Click "Get Relevant Links" to see suggestions based on your current text.</li>
+                        <li>Easily insert suggested links into your content with one click.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="notice notice-info inline" style="margin-top: 20px;">
+                <p>This feature is automatically enabled for all posts. You just need to have your Gemini API key
+                    configured in the <strong>Article Requirements</strong> tab.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Article Status Tab -->
     <div class="aag-tab-content" id="queue-tab">
         <h2>Article Status</h2>
@@ -460,116 +495,123 @@
         </table>
     </div>
 
-    <!-- License Tab -->
-    <div class="aag-tab-content" id="license-tab">
-        <h2>License & Upgrade</h2>
+    <div id="aag-message" class="notice" style="display:none;"></div>
+</div>
 
-        <?php if ($is_premium): ?>
-            <div class="aag-premium-box active">
-                <h3>✅ Premium Active</h3>
-                <p>Thank you for supporting RankReady AI! You have access to all features.</p>
-                <hr>
-                <p>License Key:
-                    <code>
-                                                                    <?php
-                                                                    if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                        echo esc_html($masked_key);
-                                                                    } else {
-                                                                        echo '********';
-                                                                    }
-                                                                    ?>
-                                                                </code>
-                </p>
-                <p class="description" style="margin-top: 5px;">
-                    This license key was sent to your email ID. <br>
-                    To retrieve a lost license key, please send an email from your registered email ID to support.
-                </p>
-                <p style="margin-top: 20px;">
-                    <button id="deactivate-license-btn" class="button button-secondary">Deactivate License</button>
-                </p>
-            </div>
-        <?php else: ?>
-            <div class="aag-pricing-container">
-                <div class="aag-pricing-box">
-                    <h3>Upgrade to Premium</h3>
-                    <ul>
-                        <li>✅ Unlimited Article Generation</li>
-                        <li>✅ Remove Daily Limits</li>
-                        <li>✅ Longer Articles (2500+ words)</li>
-                        <li>✅ Priority Support</li>
-                    </ul>
-                    <div class="aag-price-tag highlighted">$29 / one-time</div>
+<!-- License Modal -->
+<div class="aag-modal-overlay" id="aag-license-modal">
+    <div class="aag-modal-container">
+        <div class="aag-modal-close" id="aag-modal-close-btn">
+            <span class="dashicons dashicons-no-alt"></span>
+        </div>
+        <div class="aag-modal-content">
+            <h2>License & Upgrade</h2>
 
-                    <!-- Payment Options Grid -->
-                    <div class="aag-payment-grid">
-                        <!-- PayPal Button -->
-                        <div class="aag-payment-method">
-                            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
-                                target="_blank" class="button button-primary button-hero aag-btn-paypal">
-                                <span class="aag-btn-icon">
-                                    <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/icons/paypal.svg'); ?>"
-                                        width="20" height="20" alt="PayPal">
-                                </span>
-                                PayPal Checkout
-                            </a>
-                        </div>
+            <?php if ($is_premium): ?>
+                <div class="aag-premium-box active">
+                    <h3>✅ Premium Active</h3>
+                    <p>Thank you for supporting RankReady AI! You have access to all features.</p>
+                    <hr>
+                    <p>License Key:
+                        <code>
+                                    <?php
+                                    if (!empty($license_key) && strlen($license_key) > 8) {
+                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                        echo esc_html($masked_key);
+                                    } else {
+                                        echo '********';
+                                    }
+                                    ?>
+                                </code>
+                    </p>
+                    <p class="description" style="margin-top: 5px;">
+                        This license key was sent to your email ID. <br>
+                        To retrieve a lost license key, please send an email from your registered email ID to support.
+                    </p>
+                    <p style="margin-top: 20px;">
+                        <button id="deactivate-license-btn" class="button button-secondary">Deactivate License</button>
+                    </p>
+                </div>
+            <?php else: ?>
+                <div class="aag-pricing-container">
+                    <div class="aag-pricing-box" style="box-shadow: none; border: none; padding: 0;">
+                        <h3>Upgrade to Premium</h3>
+                        <ul>
+                            <li>Unlimited Article Generation</li>
+                            <li>Remove Daily Limits</li>
+                            <li>Longer Articles (2500+ words)</li>
+                            <li>Priority Support</li>
+                        </ul>
+                        <div class="aag-price-tag highlighted">$29 / one-time</div>
 
-                        <!-- UPI Button (Mobile Only) / QR (Desktop) -->
-                        <div class="aag-payment-method upi-method">
-                            <a href="upi://pay?pa=sushilmohan98-1@okhdfcbank&pn=Sushil%20Mohan&am=2400&cu=INR&tn=Auto%20Article%20Generator"
-                                class="button button-secondary button-hero upi-pay-btn aag-btn-gpay">
-                                <span class="aag-btn-icon">
-                                    <img src="<?php echo esc_url(plugin_dir_url(dirname(__FILE__)) . 'assets/icons/gpay.svg'); ?>"
-                                        width="20" height="20" alt="Google Pay">
-                                </span>
-                                Pay via Google Pay
-                            </a>
-                            <div class="upi-qr-code">
-                                <img src="<?php echo esc_url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=sushilmohan98-1@okhdfcbank%26pn=Sushil%20Mohan%26am=2400%26cu=INR%26tn=Auto%20Article%20Generator'); ?>"
-                                    alt="UPI QR Code">
+                        <!-- Payment Options Grid -->
+                        <div class="aag-payment-grid">
+                            <!-- PayPal Button -->
+                            <div class="aag-payment-method">
+                                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=product.utube@gmail.com&item_name=Auto+SEO+Article+Generator+Premium&amount=29.00&currency_code=USD"
+                                    target="_blank" class="button button-primary button-hero aag-btn-paypal">
+                                    <span class="aag-btn-icon">
+                                        <img src="<?php echo esc_url(AAG_PLUGIN_URL . 'assets/icons/paypal.svg'); ?>"
+                                            width="20" height="20" alt="PayPal">
+                                    </span>
+                                    PayPal Checkout
+                                </a>
                             </div>
-                            <p class="description">Indian users (GPay, Paytm, etc.)</p>
-                        </div>
-                    </div>
 
-                    <div class="aag-upi-claim-section" style="margin-top: 30px; display: none;"
-                        id="upi-claim-form-container">
-                        <h4>Step 2: Submit your Transaction Details</h4>
-                        <p>After paying, enter your Transaction ID (UTR) below to receive your key.</p>
-                        <form id="aag-upi-claim-form">
-                            <div style="display:grid; gap:10px; max-width:400px;">
-                                <input type="text" name="upi_email" placeholder="Your Email Address" required>
-                                <input type="text" name="upi_utr" placeholder="Transaction ID / UTR (12 digits)" required>
-                                <button type="submit" class="button button-primary">Submit for Verification</button>
+                            <!-- UPI Button (Mobile Only) / QR (Desktop) -->
+                            <div class="aag-payment-method upi-method">
+                                <a href="upi://pay?pa=sushilmohan98-1@okhdfcbank&pn=Sushil%20Mohan&am=2400&cu=INR&tn=Auto%20Article%20Generator"
+                                    class="button button-secondary button-hero upi-pay-btn aag-btn-gpay">
+                                    <span class="aag-btn-icon">
+                                        <img src="<?php echo esc_url(AAG_PLUGIN_URL . 'assets/icons/gpay.svg'); ?>"
+                                            width="20" height="20" alt="Google Pay">
+                                    </span>
+                                    Pay via Google Pay
+                                </a>
+                                <div class="upi-qr-code">
+                                    <img src="<?php echo esc_url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=sushilmohan98-1@okhdfcbank%26pn=Sushil%20Mohan%26am=2400%26cu=INR%26tn=Auto%20Article%20Generator'); ?>"
+                                        alt="UPI QR Code">
+                                </div>
+                                <p class="description">Indian users (GPay, Paytm, etc.)</p>
+                            </div>
+                        </div>
+
+                        <div class="aag-upi-claim-section" style="margin-top: 30px; display: none;"
+                            id="upi-claim-form-container">
+                            <h4>Step 2: Submit your Transaction Details</h4>
+                            <p>After paying, enter your Transaction ID (UTR) below to receive your key.</p>
+                            <form id="aag-upi-claim-form">
+                                <div style="display:grid; gap:10px; max-width:400px;">
+                                    <input type="text" name="upi_email" placeholder="Your Email Address" required>
+                                    <input type="text" name="upi_utr" placeholder="Transaction ID / UTR (12 digits)"
+                                        required>
+                                    <button type="submit" class="button button-primary">Submit for Verification</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <p style="margin-top: 20px; text-align: center;">
+                            <a href="#" id="toggle-upi-claim">Already paid via UPI? Submit Transaction ID</a>
+                        </p>
+
+                        <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px;">
+                            Need Help? Contact support: <strong>product.utube@gmail.com</strong>
+                        </p>
+
+                        <hr style="margin: 30px 0;">
+
+                        <h4>Already purchased? Activate License</h4>
+                        <p>Enter the license key you received via email.</p>
+                        <form id="aag-license-form">
+                            <div style="display:flex; gap:10px; max-width:400px;">
+                                <input type="text" id="license_key" name="license_key" class="regular-text"
+                                    placeholder="Enter License Key (e.g. PREMIUM-XXX)" required>
+                                <button type="submit" class="button button-primary">Activate</button>
                             </div>
                         </form>
                     </div>
-
-                    <p style="margin-top: 20px; text-align: center;">
-                        <a href="#" id="toggle-upi-claim">Already paid via UPI? Submit Transaction ID</a>
-                    </p>
-
-                    <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px;">
-                        Need Help? Contact support: <strong>product.utube@gmail.com</strong>
-                    </p>
-
-                    <hr style="margin: 30px 0;">
-
-                    <h4>Already purchased? Activate License</h4>
-                    <p>Enter the license key you received via email.</p>
-                    <form id="aag-license-form">
-                        <div style="display:flex; gap:10px; max-width:400px;">
-                            <input type="text" id="license_key" name="license_key" class="regular-text"
-                                placeholder="Enter License Key (e.g. PREMIUM-XXX)" required>
-                            <button type="submit" class="button button-primary">Activate</button>
-                        </div>
-                    </form>
                 </div>
-            </div>
-        <?php endif; ?>
-
+            <?php endif; ?>
+        </div>
     </div>
-
-    <div id="aag-message" class="notice" style="display:none;"></div>
 </div>

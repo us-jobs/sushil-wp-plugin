@@ -9,10 +9,12 @@ class AAG_Generator
     public $table_name;
     public $usage_table;
     private $license;
+    private $telemetry;
 
-    public function __construct($license)
+    public function __construct($license, $telemetry = null)
     {
         $this->license = $license;
+        $this->telemetry = $telemetry;
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'aag_queue';
         $this->usage_table = $wpdb->prefix . 'aag_usage';
@@ -298,11 +300,21 @@ class AAG_Generator
         if (!get_option('aag_schedule_timezone')) {
             update_option('aag_schedule_timezone', wp_timezone_string());
         }
+
+        // Telemetry tracking
+        if ($this->telemetry) {
+            $this->telemetry->track_activation();
+        }
     }
 
     public function deactivate()
     {
         wp_clear_scheduled_hook('aag_scheduled_generation');
+
+        // Telemetry tracking
+        if ($this->telemetry) {
+            $this->telemetry->track_deactivation();
+        }
     }
 
     // Check trial status (7 days, 2 articles per day)
@@ -451,7 +463,7 @@ class AAG_Generator
         file_put_contents($log_file, $entry, FILE_APPEND);
     }
 
-    public function enqueue_method1_titles_to_queue()
+    public function enqueue_method1_titles_to_queue($limit = 0, $consume = false)
     {
         global $wpdb;
 
@@ -466,7 +478,10 @@ class AAG_Generator
         $keywords = get_option('aag_method1_keywords', '');
         $added = 0;
 
-        foreach ($titles_array as $title) {
+        $count_to_process = ($limit > 0) ? min($limit, count($titles_array)) : count($titles_array);
+        $titles_to_process = array_slice($titles_array, 0, $count_to_process);
+
+        foreach ($titles_to_process as $title) {
             if ($title === '') {
                 continue;
             }
@@ -476,7 +491,7 @@ class AAG_Generator
             }
 
             $exists = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$this->table_name} WHERE title = %s",
+                "SELECT COUNT(*) FROM {$this->table_name} WHERE title = %s AND status = 'pending'",
                 $title
             ));
 
@@ -494,6 +509,11 @@ class AAG_Generator
             $added++;
         }
 
+        if ($consume) {
+            $remaining_titles = array_slice($titles_array, $count_to_process);
+            update_option('aag_method1_titles', implode("\n", $remaining_titles));
+        }
+
         self::aag_debug_log("Method 1: Enqueued {$added} titles into queue.");
         return $added;
     }
@@ -501,65 +521,28 @@ class AAG_Generator
     public function populate_queue_if_needed($force = false)
     {
         global $wpdb;
-        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name} WHERE status = 'pending'");
+        $method = get_option('aag_gen_method', 'method2');
         $buffer = 5; // Maintain at least 5 items in queue
 
-        self::aag_debug_log("Populate Queue Called. Force: " . ($force ? 'Yes' : 'No') . ", Current Count: $count");
+        // Count pending items FOR THE CURRENT METHOD
+        if ($method === 'method1') {
+            $count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name} WHERE status = 'pending' AND (keyword IS NULL OR keyword = '')");
+        } else {
+            $count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name} WHERE status = 'pending' AND (keyword IS NOT NULL AND keyword != '')");
+        }
+
+        self::aag_debug_log("Populate Queue Called. Method: $method, Force: " . ($force ? 'Yes' : 'No') . ", Current Count for Method: $count");
 
         if (!$force && $count >= $buffer) {
-            self::aag_debug_log("Queue healthy, returning.");
+            self::aag_debug_log("Queue healthy for $method, returning.");
             return; // Queue is healthy
         }
 
-        $method = get_option('aag_gen_method', 'method2');
-        self::aag_debug_log("Generation Method: $method");
-
         if ($method === 'method1') {
-            $titles_raw = get_option('aag_method1_titles', '');
-            $titles_array = array_filter(array_map('trim', explode("\n", $titles_raw)));
-
-            if (empty($titles_array)) {
-                self::aag_debug_log("Method 1: No titles found.");
-                return; // No titles to add
+            $needed = $force ? 1 : ($buffer - $count);
+            if ($needed > 0) {
+                $this->enqueue_method1_titles_to_queue($needed, true);
             }
-
-            $needed = $force ? 1 : max(1, $buffer - $count); // If forcing, just add 1
-            $keywords = get_option('aag_method1_keywords', '');
-
-            // Take top N titles
-            $to_add = array_slice($titles_array, 0, $needed);
-
-            self::aag_debug_log("Method 1: Adding " . count($to_add) . " titles.");
-
-            foreach ($to_add as $title) {
-                if (empty($title))
-                    continue;
-
-                // Filter out placeholder text if accidentally saved
-                if (stripos($title, 'titles from this list') !== false || stripos($title, 'Enter article titles') !== false) {
-                    continue;
-                }
-
-                // Check if title already exists in queue
-                $exists = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$this->table_name} WHERE title = %s AND status = 'pending'",
-                    $title
-                ));
-
-                if (!$exists) {
-                    $wpdb->insert($this->table_name, array(
-                        'title' => $title,
-                        'keywords_to_include' => $keywords,
-                        'status' => 'pending',
-                        'created_at' => current_time('mysql')
-                    ));
-                }
-            }
-
-            // Update the option with remaining titles
-            $remaining_titles = array_slice($titles_array, $needed);
-            update_option('aag_method1_titles', implode("\n", $remaining_titles));
-
         } elseif ($method === 'method2') {
             $main_keyword = get_option('aag_method2_keyword', '');
             self::aag_debug_log("Method 2: Keyword is '$main_keyword'");
