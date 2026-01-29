@@ -788,6 +788,84 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Save Traffic Settings
+    $('#aag-traffic-form').on('submit', function (e) {
+        e.preventDefault();
+
+        const $submitBtn = $(this).find('button[type="submit"]');
+        const originalText = $submitBtn.html();
+
+        $submitBtn.prop('disabled', true).html('<span class="dashicons dashicons-update-alt aag-spin"></span> Saving...');
+
+        const data = {
+            action: 'aag_save_traffic',
+            nonce: aagAjax.nonce,
+            telegram_bot_token: $('#telegram_bot_token').val().trim(),
+            telegram_chat_id: $('#telegram_chat_id').val().trim(),
+            discord_webhook_url: $('#discord_webhook_url').val().trim(),
+            ayrshare_api_key: $('#ayrshare_api_key').val().trim()
+        };
+
+        showMessage('Saving Traffic Settings...', 'info');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: data,
+            success: function (response) {
+                $submitBtn.prop('disabled', false).html(originalText);
+                if (response.success) {
+                    showMessage(response.data, 'success');
+                } else {
+                    showMessage('Error: ' + response.data, 'error');
+                }
+            },
+            error: function () {
+                $submitBtn.prop('disabled', false).html(originalText);
+                showMessage('Error saving traffic settings. Please try again.', 'error');
+            }
+        });
+    });
+
+    // Save Notification Settings
+    $('#aag-notifications-form').on('submit', function (e) {
+        e.preventDefault();
+
+        const $submitBtn = $(this).find('button[type="submit"]');
+        const originalText = $submitBtn.html();
+
+        $submitBtn.prop('disabled', true).html('<span class="dashicons dashicons-update-alt aag-spin"></span> Saving...');
+
+        const data = {
+            action: 'aag_save_notifications',
+            nonce: aagAjax.nonce,
+            onesignal_app_id: $('#onesignal_app_id').val().trim(),
+            onesignal_rest_api_key: $('#onesignal_rest_api_key').val().trim(),
+            webpushr_key: $('#webpushr_key').val().trim(),
+            webpushr_token: $('#webpushr_token').val().trim()
+        };
+
+        showMessage('Saving Notification Settings...', 'info');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: data,
+            success: function (response) {
+                $submitBtn.prop('disabled', false).html(originalText);
+                if (response.success) {
+                    showMessage(response.data, 'success');
+                } else {
+                    showMessage('Error: ' + response.data, 'error');
+                }
+            },
+            error: function () {
+                $submitBtn.prop('disabled', false).html(originalText);
+                showMessage('Error saving notification settings. Please try again.', 'error');
+            }
+        });
+    });
+
     // Save Method 2: Keyword Source
     $('#aag-method2-form').on('submit', function (e) {
         e.preventDefault();

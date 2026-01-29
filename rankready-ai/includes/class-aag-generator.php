@@ -237,6 +237,15 @@ class AAG_Generator
             'processed_at' => current_time('mysql')
         ), array('id' => $item->id));
 
+        // Auto-post to Social Media if published
+        if ($post_status === 'publish') {
+            $this->post_to_telegram($post_id);
+            $this->post_to_discord($post_id);
+            $this->post_to_ayrshare($post_id);
+            $this->post_to_onesignal($post_id);
+            $this->post_to_webpushr($post_id);
+        }
+
         // Track usage
         $this->track_usage();
 
@@ -481,6 +490,187 @@ class AAG_Generator
         $timestamp = current_time('mysql');
         $entry = "[{$timestamp}] {$message}\n";
         file_put_contents($log_file, $entry, FILE_APPEND);
+    }
+
+    private function post_to_telegram($post_id)
+    {
+        $bot_token = get_option('aag_telegram_bot_token');
+        $chat_id = get_option('aag_telegram_chat_id');
+
+        if (empty($bot_token) || empty($chat_id)) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        $permalink = get_permalink($post_id);
+        $message = "📢 *New Article Published!*\n\n";
+        $message .= "🚀 *{$post->post_title}*\n\n";
+        $message .= "Read more here:\n{$permalink}";
+
+        $url = "https://api.telegram.org/bot{$bot_token}/sendMessage";
+        $response = wp_remote_post($url, array(
+            'body' => array(
+                'chat_id' => $chat_id,
+                'text' => $message,
+                'parse_mode' => 'Markdown'
+            )
+        ));
+
+        if (is_wp_error($response)) {
+            self::aag_debug_log("Telegram Post Error: " . $response->get_error_message());
+        } else {
+            self::aag_debug_log("Successfully posted to Telegram for post ID: " . $post_id);
+        }
+    }
+
+    private function post_to_discord($post_id)
+    {
+        $webhook_url = get_option('aag_discord_webhook_url');
+
+        if (empty($webhook_url)) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        $permalink = get_permalink($post_id);
+
+        $body = array(
+            'content' => "🚀 **New Article Published!**",
+            'embeds' => array(
+                array(
+                    'title' => $post->post_title,
+                    'url' => $permalink,
+                    'description' => "Check out our latest article!",
+                    'color' => 5814783 // Blurple color
+                )
+            )
+        );
+
+        $response = wp_remote_post($webhook_url, array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => wp_json_encode($body)
+        ));
+
+        if (is_wp_error($response)) {
+            self::aag_debug_log("Discord Post Error: " . $response->get_error_message());
+        } else {
+            self::aag_debug_log("Successfully posted to Discord for post ID: " . $post_id);
+        }
+    }
+
+    private function post_to_ayrshare($post_id)
+    {
+        $api_key = get_option('aag_ayrshare_api_key');
+
+        if (empty($api_key)) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        $permalink = get_permalink($post_id);
+        $message = "🚀 New Article: {$post->post_title}\n\nRead more: {$permalink}";
+
+        $url = "https://api.ayrshare.com/api/post";
+        $response = wp_remote_post($url, array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json'
+            ),
+            'body' => wp_json_encode(array(
+                'post' => $message,
+                'platforms' => array('facebook', 'instagram', 'twitter', 'linkedin', 'gmb')
+            ))
+        ));
+
+        if (is_wp_error($response)) {
+            self::aag_debug_log("Ayrshare Post Error: " . $response->get_error_message());
+        } else {
+            $response_body = wp_remote_retrieve_body($response);
+            self::aag_debug_log("Ayrshare Post Response: " . $response_body);
+        }
+    }
+
+    private function post_to_onesignal($post_id)
+    {
+        $app_id = get_option('aag_onesignal_app_id');
+        $api_key = get_option('aag_onesignal_rest_api_key');
+
+        if (empty($app_id) || empty($api_key)) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        $permalink = get_permalink($post_id);
+        $excerpt = wp_trim_words($post->post_content, 25);
+        $image_url = get_the_post_thumbnail_url($post_id, 'full');
+
+        $body = array(
+            'app_id' => $app_id,
+            'included_segments' => array('Subscribed Users'),
+            'contents' => array('en' => $excerpt),
+            'headings' => array('en' => $post->post_title),
+            'url' => $permalink
+        );
+
+        if ($image_url) {
+            $body['big_picture'] = $image_url;
+            $body['chrome_web_image'] = $image_url;
+        }
+
+        $response = wp_remote_post("https://onesignal.com/api/v1/notifications", array(
+            'headers' => array(
+                'Authorization' => 'Basic ' . $api_key,
+                'Content-Type' => 'application/json'
+            ),
+            'body' => wp_json_encode($body)
+        ));
+
+        if (is_wp_error($response)) {
+            self::aag_debug_log("OneSignal Notification Error: " . $response->get_error_message());
+        } else {
+            self::aag_debug_log("OneSignal Notification Response: " . wp_remote_retrieve_body($response));
+        }
+    }
+
+    private function post_to_webpushr($post_id)
+    {
+        $key = get_option('aag_webpushr_key');
+        $token = get_option('aag_webpushr_token');
+
+        if (empty($key) || empty($token)) {
+            return;
+        }
+
+        $post = get_post($post_id);
+        $permalink = get_permalink($post_id);
+        $excerpt = wp_trim_words($post->post_content, 25);
+        $image_url = get_the_post_thumbnail_url($post_id, 'full');
+
+        $body = array(
+            'title' => $post->post_title,
+            'message' => $excerpt,
+            'target_url' => $permalink
+        );
+
+        if ($image_url) {
+            $body['image'] = $image_url;
+            $body['icon'] = $image_url;
+        }
+
+        $response = wp_remote_post("https://api.webpushr.com/v1/notification/send/all", array(
+            'headers' => array(
+                'webpushrKey' => $key,
+                'webpushrAuthToken' => $token,
+                'Content-Type' => 'application/json'
+            ),
+            'body' => wp_json_encode($body)
+        ));
+
+        if (is_wp_error($response)) {
+            self::aag_debug_log("Webpushr Notification Error: " . $response->get_error_message());
+        } else {
+            self::aag_debug_log("Webpushr Notification Response: " . wp_remote_retrieve_body($response));
+        }
     }
 
     public function enqueue_method1_titles_to_queue($limit = 0, $consume = false)

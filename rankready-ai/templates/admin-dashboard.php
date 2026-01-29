@@ -57,10 +57,12 @@
     <div class="aag-tabs">
         <button class="aag-tab-btn active" data-tab="settings">Schedule Settings</button>
         <button class="aag-tab-btn" data-tab="requirements">Article Requirements</button>
-        <button class="aag-tab-btn" data-tab="method1">Method 1: Title List</button>
-        <button class="aag-tab-btn" data-tab="method2">Method 2: Keyword Based</button>
+        <button class="aag-tab-btn" data-tab="method1">Title List</button>
+        <button class="aag-tab-btn" data-tab="method2">Keyword Based</button>
         <button class="aag-tab-btn" data-tab="queue">Article Status</button>
-        <button class="aag-tab-btn aag-features-tab-btn" data-tab="features">Features</button>
+        <button class="aag-tab-btn" data-tab="traffic">Get Traffic</button>
+        <button class="aag-tab-btn" data-tab="notifications">Notifications</button>
+        <button class="aag-tab-btn aag-features-tab-btn" data-tab="features">SEO</button>
     </div>
 
     <!-- Settings Tab -->
@@ -81,15 +83,15 @@
                                     of titles or dynamically from a keyword.</span></span></label></th>
                     <td>
                         <select id="gen_method" name="gen_method">
-                            <option value="method1" <?php selected(get_option('aag_gen_method'), 'method1'); ?>>Method
-                                1: Title List</option>
-                            <option value="method2" <?php selected(get_option('aag_gen_method'), 'method2'); ?>>Method
-                                2: Keyword Based</option>
+                            <option value="method1" <?php selected(get_option('aag_gen_method'), 'method1'); ?>>Title
+                                List</option>
+                            <option value="method2" <?php selected(get_option('aag_gen_method'), 'method2'); ?>>Keyword
+                                Based</option>
                         </select>
                         <div style="margin-top: 10px;">
-                            <button type="button" class="button aag-nav-btn" data-target="method1">Go to Methods 1
+                            <button type="button" class="button aag-nav-btn" data-target="method1">Go to Title List
                                 Settings</button>
-                            <button type="button" class="button aag-nav-btn" data-target="method2">Go to Methods 2
+                            <button type="button" class="button aag-nav-btn" data-target="method2">Go to Keyword Based
                                 Settings</button>
                         </div>
                     </td>
@@ -239,9 +241,8 @@
         </form>
     </div>
 
-    <!-- Method 1 Tab -->
     <div class="aag-tab-content" id="method1-tab">
-        <h2>Method 1: Title List Source <span
+        <h2>Title List Source <span
                 style="font-weight: normal; font-size: 0.7em; color: #666; margin-left: 10px;">(Article Titles Source
                 (one per line))</span></h2>
         <form id="aag-method1-form">
@@ -256,9 +257,8 @@
         </form>
     </div>
 
-    <!-- Method 2 Tab -->
     <div class="aag-tab-content" id="method2-tab">
-        <h2>Method 2: Keyword Based Source</h2>
+        <h2>Keyword Based Source</h2>
         <form id="aag-method2-form">
             <table class="form-table">
                 <tr>
@@ -394,7 +394,78 @@
         </form>
     </div>
 
-    <!-- Features Tab -->
+    <!-- Notifications Tab -->
+    <div class="aag-tab-content" id="notifications-tab">
+        <h2>Notifications & Alerts</h2>
+        <p>Configure push notifications to alert your subscribers when new articles are published.</p>
+
+        <form id="aag-notifications-form">
+            <table class="form-table">
+                <!-- OneSignal Settings -->
+                <tr>
+                    <th colspan="2" style="padding-left: 0;">
+                        <h3 style="margin-bottom: 0; display: flex; align-items: center;">
+                            <span class="dashicons dashicons-megaphone"
+                                style="color: #E54B4D; font-size: 1.3em; margin-right: 10px; vertical-align: middle;"></span>
+                            OneSignal Settings
+                        </h3>
+                        <p class="description">Send push notifications via OneSignal.</p>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="onesignal_app_id">OneSignal App ID</label></th>
+                    <td>
+                        <input type="text" id="onesignal_app_id" name="onesignal_app_id"
+                            value="<?php echo esc_attr(get_option('aag_onesignal_app_id', '')); ?>" class="regular-text"
+                            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="onesignal_rest_api_key">REST API Key</label></th>
+                    <td>
+                        <input type="password" id="onesignal_rest_api_key" name="onesignal_rest_api_key"
+                            value="<?php echo esc_attr(get_option('aag_onesignal_rest_api_key', '')); ?>"
+                            class="regular-text">
+                        <p class="description">Found in OneSignal Dashboard -> Settings -> Keys & IDs.</p>
+                    </td>
+                </tr>
+
+                <!-- Webpushr Settings -->
+                <tr>
+                    <th colspan="2" style="padding-left: 0; padding-top: 30px;">
+                        <h3 style="margin-bottom: 0; display: flex; align-items: center;">
+                            <span class="aag-settings-icon">
+                                <span class="dashicons dashicons-cloud" style="color: #007bff; font-size: 20px;"></span>
+                            </span>
+                            Webpushr Settings
+                        </h3>
+                        <p class="description">Send push notifications via Webpushr.</p>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="webpushr_key">Webpushr Key</label></th>
+                    <td>
+                        <input type="text" id="webpushr_key" name="webpushr_key"
+                            value="<?php echo esc_attr(get_option('aag_webpushr_key', '')); ?>" class="regular-text">
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="webpushr_token">Auth Token</label></th>
+                    <td>
+                        <input type="password" id="webpushr_token" name="webpushr_token"
+                            value="<?php echo esc_attr(get_option('aag_webpushr_token', '')); ?>" class="regular-text">
+                        <p class="description">Found in Webpushr Dashboard -> API Access.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="submit">
+                <button type="submit" class="button button-primary">Save Notification Settings</button>
+            </p>
+        </form>
+    </div>
+
+    <!-- SEO (Features) Tab -->
     <div class="aag-tab-content" id="features-tab">
         <div class="aag-features-layout">
             <!-- Sidebar Navigation for Features -->
@@ -622,6 +693,114 @@
             </div>
         </div>
     </div>
+    <!-- Get Traffic Tab -->
+    <div class="aag-tab-content" id="traffic-tab">
+        <h2>Get Social Traffic (Auto-Posting)</h2>
+        <p>Automatically share your generated articles to Telegram and Discord as soon as they are published.</p>
+
+        <form id="aag-traffic-form">
+            <table class="form-table">
+                <tr>
+                    <th colspan="2" style="padding-left: 0;">
+                        <h3 style="margin-bottom: 0; display: flex; align-items: center;">
+                            <span class="aag-settings-icon">
+                                <svg width="30px" height="30px" viewBox="0 0 32 32" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="16" cy="16" r="14" fill="url(#paint0_linear_87_7225)" />
+                                    <path
+                                        d="M22.9866 10.2088C23.1112 9.40332 22.3454 8.76755 21.6292 9.082L7.36482 15.3448C6.85123 15.5703 6.8888 16.3483 7.42147 16.5179L10.3631 17.4547C10.9246 17.6335 11.5325 17.541 12.0228 17.2023L18.655 12.6203C18.855 12.4821 19.073 12.7665 18.9021 12.9426L14.1281 17.8646C13.665 18.3421 13.7569 19.1512 14.314 19.5005L19.659 22.8523C20.2585 23.2282 21.0297 22.8506 21.1418 22.1261L22.9866 10.2088Z"
+                                        fill="white" />
+                                    <defs>
+                                        <linearGradient id="paint0_linear_87_7225" x1="16" y1="2" x2="16" y2="30"
+                                            gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#37BBFE" />
+                                            <stop offset="1" stop-color="#007DBB" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </span>
+                            Telegram Settings
+                        </h3>
+                        <p class="description">Post articles to your Telegram Channel or Group.</p>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="telegram_bot_token">Telegram Bot Token</label></th>
+                    <td>
+                        <input type="text" id="telegram_bot_token" name="telegram_bot_token"
+                            value="<?php echo esc_attr(get_option('aag_telegram_bot_token', '')); ?>"
+                            class="regular-text" placeholder="123456789:ABCDefgh...">
+                        <p class="description">Create a bot via <a href="https://t.me/botfather"
+                                target="_blank">@BotFather</a> to get your token.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="telegram_chat_id">Telegram Chat ID</label></th>
+                    <td>
+                        <input type="text" id="telegram_chat_id" name="telegram_chat_id"
+                            value="<?php echo esc_attr(get_option('aag_telegram_chat_id', '')); ?>" class="regular-text"
+                            placeholder="@mychannel or -100123456789">
+                        <p class="description">Username of your channel (with @) or numerical Chat ID.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th colspan="2" style="padding-left: 0; padding-top: 30px;">
+                        <h3 style="margin-bottom: 0; display: flex; align-items: center;">
+                            <span class="aag-settings-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M19.73 4.87A18.23 18.23 0 0 0 15.08 3.5a.05.05 0 0 0-.05.02c-.2.35-.42.81-.57 1.17a16.83 16.83 0 0 0-4.88 0c-.15-.36-.38-.82-.58-1.17a.05.05 0 0 0-.05-.02c-1.55.13-3.11.59-4.65 1.37a.07.07 0 0 0-.03.03C1.65 8.78.81 12.63 1.15 16.44a.07.07 0 0 0 .03.05 18.25 18.25 0 0 0 5.49 2.76.05.05 0 0 0 .06-.02c.42-.58.79-1.2 1.09-1.85a.05.05 0 0 0-.03-.07 11.97 11.97 0 0 1-1.71-.82.05.05 0 0 1-.01-.08c.14-.11.28-.22.41-.33a.05.05 0 0 1 .05-.01c3.55 1.63 7.4 1.63 10.9 0a.05.05 0 0 1 .05 0c.13.11.27.22.41.33a.05.05 0 0 1-.01.08c-.54.33-1.12.6-1.71.82a.05.05 0 0 0-.03.07c.3.65.67 1.27 1.09 1.85a.05.05 0 0 0 .06.02 18.2 18.2 0 0 0 5.49-2.76.07.07 0 0 0 .03-.05c.4-4.38-.69-8.2-2.9-11.54a.07.07 0 0 0-.03-.03zM8.53 13.91c-1.07 0-1.95-.98-1.95-2.19s.86-2.19 1.95-2.19 1.95.98 1.95 2.19-.88 2.19-1.95 2.19zm6.94 0c-1.07 0-1.95-.98-1.95-2.19s.86-2.19 1.95-2.19 1.95.98 1.95 2.19-.88 2.19-1.95 2.19z"
+                                        fill="#5865F2" />
+                                </svg>
+                            </span>
+                            Discord Settings
+                        </h3>
+                        <p class="description">Post articles to your Discord Server via Webhook.</p>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="discord_webhook_url">Discord Webhook URL</label></th>
+                    <td>
+                        <input type="url" id="discord_webhook_url" name="discord_webhook_url"
+                            value="<?php echo esc_attr(get_option('aag_discord_webhook_url', '')); ?>"
+                            class="large-text" placeholder="https://discord.com/api/webhooks/...">
+                        <p class="description">Go to Channel Settings -> Integrations -> Webhooks to create one.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="2" style="padding-left: 0; padding-top: 30px;">
+                        <h3 style="margin-bottom: 0; display: flex; align-items: center;">
+                            <svg width="24" height="24" viewBox="0 0 100 100" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
+                                <circle cx="50" cy="50" r="50" fill="#FF5722" />
+                                <path d="M30 50L45 65L70 35" stroke="white" stroke-width="8" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Premium Sharing (FB, IG, X)
+                        </h3>
+                        <p class="description">Use <a href="https://www.ayrshare.com/?ref=rankready"
+                                target="_blank">Ayrshare</a> to post to Facebook, Instagram, X (Twitter), LinkedIn, and
+                            more without API approval headaches.</p>
+                    </th>
+                </tr>
+                <tr>
+                    <th><label for="ayrshare_api_key">Ayrshare API Key</label></th>
+                    <td>
+                        <input type="password" id="ayrshare_api_key" name="ayrshare_api_key"
+                            value="<?php echo esc_attr(get_option('aag_ayrshare_api_key', '')); ?>" class="large-text"
+                            placeholder="API Key from Ayrshare Dashboard">
+                        <p class="description">Get your API Key from the Ayrshare Dashboard -> API Key section.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="submit">
+                <button type="submit" class="button button-primary">Save Traffic Settings</button>
+            </p>
+        </form>
+    </div>
 
     <!-- Article Status Tab -->
     <div class="aag-tab-content" id="queue-tab">
@@ -713,15 +892,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                                                                                        <?php
-                                                                                                        if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                                                            $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                                                            echo esc_html($masked_key);
-                                                                                                        } else {
-                                                                                                            echo '********';
-                                                                                                        }
-                                                                                                        ?>
-                                                                                                    </code>
+                                                                                                                                            <?php
+                                                                                                                                            if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                                                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                                                                                                echo esc_html($masked_key);
+                                                                                                                                            } else {
+                                                                                                                                                echo '********';
+                                                                                                                                            }
+                                                                                                                                            ?>
+                                                                                                                                        </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>

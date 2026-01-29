@@ -834,3 +834,22 @@
     background: #f3f4f6;
     color: #374151;
 }
+
+/* Social and Notification Icons */
+.aag-settings-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.aag-settings-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+}

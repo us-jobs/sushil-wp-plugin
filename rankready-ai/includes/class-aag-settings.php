@@ -25,6 +25,8 @@ class AAG_Settings
         add_action('wp_ajax_aag_save_method2', array($this, 'save_method2'));
         add_action('wp_ajax_aag_save_requirements', array($this, 'save_requirements'));
         add_action('wp_ajax_aag_test_freepik', array($this, 'test_freepik'));
+        add_action('wp_ajax_aag_save_traffic', array($this, 'save_traffic'));
+        add_action('wp_ajax_aag_save_notifications', array($this, 'save_notifications'));
 
         // Refresher actions
         add_action('wp_ajax_aag_scan_old_articles', array($this, 'scan_old_articles'));
@@ -390,5 +392,51 @@ class AAG_Settings
         }
 
         wp_send_json_success('Suggestion applied successfully! Article updated.');
+    }
+
+    public function save_traffic()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        if (isset($_POST['telegram_bot_token'])) {
+            update_option('aag_telegram_bot_token', sanitize_text_field($_POST['telegram_bot_token']));
+        }
+        if (isset($_POST['telegram_chat_id'])) {
+            update_option('aag_telegram_chat_id', sanitize_text_field($_POST['telegram_chat_id']));
+        }
+        if (isset($_POST['discord_webhook_url'])) {
+            update_option('aag_discord_webhook_url', esc_url_raw($_POST['discord_webhook_url']));
+        }
+        if (isset($_POST['ayrshare_api_key'])) {
+            update_option('aag_ayrshare_api_key', sanitize_text_field($_POST['ayrshare_api_key']));
+        }
+
+        wp_send_json_success('Traffic settings saved successfully!');
+    }
+
+    public function save_notifications()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        if (isset($_POST['onesignal_app_id'])) {
+            update_option('aag_onesignal_app_id', sanitize_text_field($_POST['onesignal_app_id']));
+        }
+        if (isset($_POST['onesignal_rest_api_key'])) {
+            update_option('aag_onesignal_rest_api_key', sanitize_text_field($_POST['onesignal_rest_api_key']));
+        }
+        if (isset($_POST['webpushr_key'])) {
+            update_option('aag_webpushr_key', sanitize_text_field($_POST['webpushr_key']));
+        }
+        if (isset($_POST['webpushr_token'])) {
+            update_option('aag_webpushr_token', sanitize_text_field($_POST['webpushr_token']));
+        }
+
+        wp_send_json_success('Notification settings saved successfully!');
     }
 }
