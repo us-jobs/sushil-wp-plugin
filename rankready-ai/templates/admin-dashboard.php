@@ -37,19 +37,19 @@
     <!-- Usage Stats -->
     <div class="aag-usage-stats">
         <div class="stat-box">
-            <h3><?php echo esc_html($usage_stats['today']); ?></h3>
+            <h3 id="aag-stats-today-count"><?php echo esc_html($usage_stats['today']); ?></h3>
             <p>Today</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo esc_html($usage_stats['month']); ?></h3>
+            <h3 id="aag-stats-month-count"><?php echo esc_html($usage_stats['month']); ?></h3>
             <p>This Month</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo esc_html($usage_stats['remaining']); ?></h3>
+            <h3 id="aag-stats-remaining-count"><?php echo esc_html($usage_stats['remaining']); ?></h3>
             <p>Remaining Today</p>
         </div>
         <div class="stat-box">
-            <h3><?php echo esc_html($pending_count); ?></h3>
+            <h3 id="aag-stats-queue-count"><?php echo esc_html($pending_count); ?></h3>
             <p>In Queue</p>
         </div>
     </div>
@@ -59,8 +59,8 @@
         <button class="aag-tab-btn" data-tab="requirements">Article Requirements</button>
         <button class="aag-tab-btn" data-tab="method1">Method 1: Title List</button>
         <button class="aag-tab-btn" data-tab="method2">Method 2: Keyword Based</button>
-        <button class="aag-tab-btn" data-tab="linking">Internal Linking</button>
         <button class="aag-tab-btn" data-tab="queue">Article Status</button>
+        <button class="aag-tab-btn aag-features-tab-btn" data-tab="features">Features</button>
     </div>
 
     <!-- Settings Tab -->
@@ -395,29 +395,176 @@
         </form>
     </div>
 
-    <!-- Internal Linking Tab -->
-    <div class="aag-tab-content" id="linking-tab">
-        <div class="aag-card">
-            <h2>AI Internal Link Builder</h2>
-            <p>This feature helps you maintain a healthy internal link structure by suggesting relevant posts from your
-                site as you write new content.</p>
-
-            <div class="aag-feature-box">
-                <div class="feature-icon"><span class="dashicons dashicons-admin-links"></span></div>
-                <div class="feature-text">
-                    <h3>How it works</h3>
-                    <ul>
-                        <li>Open any post in the WordPress editor.</li>
-                        <li>Look for the <strong>RankReady AI Linking</strong> sidebar icon on the top right.</li>
-                        <li>Click "Get Relevant Links" to see suggestions based on your current text.</li>
-                        <li>Easily insert suggested links into your content with one click.</li>
-                    </ul>
+    <!-- Features Tab -->
+    <div class="aag-tab-content" id="features-tab">
+        <div class="aag-features-layout">
+            <!-- Sidebar Navigation for Features -->
+            <div class="aag-features-sidebar">
+                <div class="aag-feature-nav-item active" data-feature="internal-link">
+                    <span class="dashicons dashicons-admin-links"></span>
+                    <span>Internal Link Builder</span>
+                </div>
+                <div class="aag-feature-nav-item" data-feature="alt-text">
+                    <span class="dashicons dashicons-format-image"></span>
+                    <span>AI Auto-ALT Text</span>
+                </div>
+                <div class="aag-feature-nav-item" data-feature="gap-analyzer">
+                    <span class="dashicons dashicons-chart-area"></span>
+                    <span>Content Gap Analyzer</span>
                 </div>
             </div>
 
-            <div class="notice notice-info inline" style="margin-top: 20px;">
-                <p>This feature is automatically enabled for all posts. You just need to have your Gemini API key
-                    configured in the <strong>Article Requirements</strong> tab.</p>
+            <!-- Content Area for Features -->
+            <div class="aag-features-main">
+                <!-- Internal Link Builder -->
+                <div class="aag-feature-content active" id="feature-internal-link">
+                    <div class="aag-card">
+                        <h2>AI Internal Link Builder</h2>
+                        <p>This feature helps you maintain a healthy internal link structure by suggesting relevant
+                            posts from your site as you write new content.</p>
+
+                        <div class="aag-feature-box">
+                            <div class="feature-icon"><span class="dashicons dashicons-admin-links"></span></div>
+                            <div class="feature-text">
+                                <h3>How it works</h3>
+                                <ul>
+                                    <li>Open any post in the WordPress editor.</li>
+                                    <li>Look for the <strong>RankReady AI Linking</strong> sidebar icon on the top
+                                        right.</li>
+                                    <li>Click "Get Relevant Links" to see suggestions based on your current text.</li>
+                                    <li>Easily insert suggested links into your content with one click.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="notice notice-info inline" style="margin-top: 20px;">
+                            <p>This feature is automatically enabled for all posts. You just need to have your Gemini
+                                API key configured in the <strong>Article Requirements</strong> tab.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Auto-ALT Text & Captions -->
+                <div class="aag-feature-content" id="feature-alt-text">
+                    <div class="aag-card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h2>AI Auto-ALT Text & Captions</h2>
+                                <p>Automatically generate SEO-friendly descriptive ALT text and captions for your images
+                                    using AI.</p>
+                            </div>
+                            <button id="aag-scan-images-btn" class="button button-primary">
+                                <span class="dashicons dashicons-search" style="margin-top: 4px;"></span> Scan Media
+                                Library
+                            </button>
+                        </div>
+
+                        <div id="aag-image-seo-container">
+                            <div class="aag-placeholder-feature" id="aag-image-empty-state">
+                                <div class="dashicons dashicons-format-image"
+                                    style="font-size: 64px; height: 64px; width: 64px; color: #ccc;"></div>
+                                <h3>No Images Scanned</h3>
+                                <p>Click the button above to find images in your media library missing ALT text.</p>
+                            </div>
+
+                            <div id="aag-image-scan-results" style="display: none;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h3 style="margin: 0;">Images Missing ALT Text</h3>
+                                    <button id="aag-bulk-process-alt-btn" class="button">
+                                        <span class="dashicons dashicons-images-alt2" style="margin-top: 4px;"></span>
+                                        Process All Visible
+                                    </button>
+                                </div>
+                                <table class="wp-list-table widefat fixed striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 80px;">Image</th>
+                                            <th>File Name / Title</th>
+                                            <th>Status</th>
+                                            <th style="width: 150px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="aag-image-seo-table-body">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Competitor Content Gap Analyzer -->
+                <div class="aag-feature-content" id="feature-gap-analyzer">
+                    <div class="aag-card">
+                        <h2>Competitor Content Gap Analyzer</h2>
+                        <p>Enter a target keyword and your competitor URLs to find missing content opportunities.</p>
+                        <div
+                            style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 10px 15px; margin-bottom: 20px; font-size: 13px; color: #0369a1;">
+                            <strong>Note:</strong> Enter competitors of the site where this plugin is installed to get
+                            the best results.
+                        </div>
+
+                        <div class="aag-gap-analyzer-form" style="margin-top: 20px;">
+                            <div class="aag-form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 5px;">Target Keyword
+                                    <span style="color: red;">*</span></label>
+                                <input type="text" id="aag-gap-keyword" placeholder="e.g. Best SEO Plugin for WordPress"
+                                    style="width: 100%; max-width: 500px;" />
+                            </div>
+
+                            <div class="aag-form-group" style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 5px;">Competitor URLs
+                                    (Max
+                                    5)</label>
+                                <div id="aag-competitor-urls-container">
+                                    <input type="url" class="aag-competitor-url"
+                                        placeholder="https://competitor1.com/ranking-page/"
+                                        style="width: 100%; max-width: 500px; margin-bottom: 5px;" />
+                                    <input type="url" class="aag-competitor-url"
+                                        placeholder="https://competitor2.com/ranking-page/"
+                                        style="width: 100%; max-width: 500px; margin-bottom: 5px;" />
+                                </div>
+                                <button type="button" id="aag-add-url-btn" class="button button-small"
+                                    style="margin-top: 5px;">
+                                    <span class="dashicons dashicons-plus" style="margin-top: 4px;"></span> Add Another
+                                    URL
+                                </button>
+                            </div>
+
+                            <button type="button" id="aag-analyze-gap-btn" class="button button-primary">
+                                <span class="dashicons dashicons-search" style="margin-top: 4px;"></span> Analyze
+                                Content Gaps
+                            </button>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div id="aag-gap-results"
+                            style="display: none; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                            <h3 style="margin-bottom: 15px;">Missing Content Opportunities</h3>
+                            <div class="aag-table-responsive">
+                                <table class="wp-list-table widefat fixed striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Proposed Article Title</th>
+                                            <th>Gap Identified / Reason</th>
+                                            <th style="width: 100px;">Priority <span
+                                                    class="dashicons dashicons-editor-help"
+                                                    title="Priority is determined by AI based on search intent relevance and competitor content gaps. High priority indicates a significant opportunity to rank."
+                                                    style="font-size: 16px; cursor: help; vertical-align: text-bottom;"></span>
+                                            </th>
+                                            <th style="width: 150px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="aag-gap-results-body">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -516,15 +663,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                                    <?php
-                                                    if (!empty($license_key) && strlen($license_key) > 8) {
-                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                        echo esc_html($masked_key);
-                                                    } else {
-                                                        echo '********';
-                                                    }
-                                                    ?>
-                                                </code>
+                                                                            <?php
+                                                                            if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                                echo esc_html($masked_key);
+                                                                            } else {
+                                                                                echo '********';
+                                                                            }
+                                                                            ?>
+                                                                        </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>

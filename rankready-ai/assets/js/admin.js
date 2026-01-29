@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-    console.log('AAG: Admin script loaded v2.0.1');
+    console.log('AAG: Admin script loaded v2.0.7');
 
     // Tab switching
     $('.aag-tab-btn').on('click', function () {
@@ -15,6 +15,308 @@ jQuery(document).ready(function ($) {
         if (tabId === 'queue') {
             refreshQueue();
         }
+    });
+
+    // Features Sub-tab switching
+    $(document).on('click', '.aag-feature-nav-item', function () {
+        const featureId = $(this).data('feature');
+        console.log('AAG: Switching to feature:', featureId);
+
+        $('.aag-feature-nav-item').removeClass('active');
+        $(this).addClass('active');
+
+        $('.aag-feature-content').removeClass('active');
+        $('#feature-' + featureId).addClass('active');
+    });
+
+    // --- Image SEO Section Functions ---
+
+    function renderImageScanResults(images) {
+        const $tbody = $('#aag-image-seo-table-body');
+        $tbody.empty();
+
+        if (images.length === 0) {
+            $('#aag-image-scan-results').hide();
+            $('#aag-image-empty-state').show().find('h3').text('No Images Found');
+            $('#aag-image-empty-state').find('p').text('All images in your media library already have ALT text!');
+            return;
+        }
+
+        images.forEach(function (img) {
+            $tbody.append(`
+                <tr id="aag-image-row-${img.id}">
+                    <td><img src="${img.url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" /></td>
+                    <td>
+                        <strong>${img.title}</strong><br/>
+                        <span class="description" style="font-size: 11px;">ID: ${img.id}</span>
+                    </td>
+                    <td class="aag-image-status">
+                        <span class="aag-status-pending">Missing ALT</span>
+                    </td>
+                    <td>
+                        <button class="button button-small aag-generate-alt-btn" data-id="${img.id}">
+                            Analyze & Generate
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+
+        $('#aag-image-empty-state').hide();
+        $('#aag-image-scan-results').fadeIn();
+    }
+
+    // Scan Images Button (Using delegation for robustness)
+    $(document).on('click', '#aag-scan-images-btn', function (e) {
+        e.preventDefault();
+        console.log('AAG: Scan Media Library button clicked');
+
+        const $btn = $(this);
+        const originalText = $btn.html();
+
+        console.log('AAG: Starting AJAX scan request...');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update aag-spin" style="margin-top: 4px;"></span> Scanning...');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_scan_images',
+                nonce: aagAjax.nonce
+            },
+            success: function (response) {
+                console.log('AAG: Scan response received:', response);
+                $btn.prop('disabled', false).html(originalText);
+                if (response.success) {
+                    console.log('AAG: Scan successful, rendering results');
+                    renderImageScanResults(response.data.images || []);
+                    if (response.data.message) {
+                        showMessage(response.data.message, 'info');
+                    }
+                } else {
+                    console.error('AAG: Scan failed server-side:', response.data);
+                    showMessage('Scan failed: ' + response.data, 'error');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AAG: Scan AJAX error:', status, error);
+                console.error('AAG: Response text:', xhr.responseText);
+                $btn.prop('disabled', false).html(originalText);
+                showMessage('Connection error during scan. Check console for details.', 'error');
+            }
+        });
+    });
+
+    // Single Image Process
+    $(document).on('click', '.aag-generate-alt-btn', function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const attachmentId = $btn.data('id');
+        const $row = $(`#aag-image-row-${attachmentId}`);
+        const $statusCell = $row.find('.aag-image-status');
+
+        $btn.prop('disabled', true).text('Generating...');
+        $statusCell.html('<span class="dashicons dashicons-update aag-spin"></span> Processing...');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_generate_image_seo',
+                nonce: aagAjax.nonce,
+                attachment_id: attachmentId
+            },
+            success: function (response) {
+                if (response.success) {
+                    $statusCell.html('<span class="aag-status-completed" style="background:#d1fae5; color:#065f46; padding: 2px 5px; border-radius: 4px; font-size: 11px;">✅ Updated</span>');
+                    $btn.remove();
+
+                    // Show generated info
+                    const meta = `
+                        <div class="aag-image-meta-info" style="font-size:11px; color:#6b7280; margin-top:5px; line-height: 1.3;">
+                            <strong>Title:</strong> ${response.data.title}<br/>
+                            <strong>Alt:</strong> ${response.data.alt}<br/>
+                            <strong>Caption:</strong> ${response.data.caption}
+                        </div>
+                    `;
+                    $statusCell.append(meta);
+
+                    // Also update the row's title display if it exists
+                    $row.find('strong').first().text(response.data.title);
+                } else {
+                    $btn.prop('disabled', false).text('Try Again');
+                    $statusCell.html('<span class="aag-status-failed">Failed</span>');
+                    showMessage('Error: ' + response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Try Again');
+                $statusCell.html('<span class="aag-status-failed">Error</span>');
+                showMessage('Connection error.', 'error');
+            }
+        });
+    });
+
+    // Bulk Process
+    $('#aag-bulk-process-alt-btn').on('click', async function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const $allButtons = $('.aag-generate-alt-btn:not(:disabled)');
+
+        if ($allButtons.length === 0) {
+            showMessage('No images left to process.', 'info');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to process ${$allButtons.length} images? This will use Gemini API credits.`)) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update aag-spin" style="margin-top: 4px;"></span> Processing Bulk...');
+
+        // Process sequentially to avoid API quota errors
+        for (let i = 0; i < $allButtons.length; i++) {
+            const $singleBtn = $($allButtons[i]);
+            await new Promise(resolve => {
+                $singleBtn.click();
+
+                // We need a way to know when it finishes. 
+                const checkInterval = setInterval(() => {
+                    const id = $singleBtn.data('id');
+                    const $row = $(`#aag-image-row-${id}`);
+                    if ($row.find('.aag-status-completed').length > 0 || $row.find('.aag-status-failed').length > 0) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 500);
+            });
+
+            // Small pause
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        $btn.prop('disabled', false).html('<span class="dashicons dashicons-images-alt2" style="margin-top: 4px;"></span> Process All Visible');
+        showMessage('Bulk processing complete!', 'success');
+    });
+
+    // --- Content Gap Analyzer Section ---
+
+    // Add another URL field
+    $('#aag-add-url-btn').on('click', function () {
+        const count = $('.aag-competitor-url').length;
+        if (count >= 5) {
+            alert('Maximum 5 competitor URLs allowed.');
+            return;
+        }
+        $('#aag-competitor-urls-container').append(`
+            <input type="url" class="aag-competitor-url" placeholder="https://competitor${count + 1}.com/ranking-page/"
+                style="width: 100%; max-width: 500px; margin-bottom: 5px;" />
+        `);
+    });
+
+    // Analyze gaps
+    $('#aag-analyze-gap-btn').on('click', function () {
+        console.log('AAG: Analyze Content Gaps button clicked');
+        const keyword = $('#aag-gap-keyword').val().trim();
+        const urls = [];
+        $('.aag-competitor-url').each(function () {
+            const val = $(this).val().trim();
+            if (val) urls.push(val);
+        });
+
+        console.log('AAG: Keyword:', keyword);
+        console.log('AAG: URLs:', urls);
+
+        if (!keyword) {
+            alert('Please enter a target keyword.');
+            return;
+        }
+
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update aag-spin" style="margin-top: 4px;"></span> Analyzing Gaps...');
+        $('#aag-gap-results').hide();
+
+        console.log('AAG: Sending AJAX request to:', aagAjax.ajax_url);
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_analyze_content_gap',
+                nonce: aagAjax.nonce,
+                keyword: keyword,
+                urls: urls
+            },
+            success: function (response) {
+                $btn.prop('disabled', false).html(originalHtml);
+                if (response.success) {
+                    const suggestions = response.data.suggestions || [];
+                    const $tbody = $('#aag-gap-results-body');
+                    $tbody.empty();
+
+                    if (suggestions.length === 0) {
+                        $tbody.append('<tr><td colspan="4">No gaps identified. Try broader competitors.</td></tr>');
+                    } else {
+                        suggestions.forEach(function (s) {
+                            $tbody.append(`
+                                <tr>
+                                    <td><strong>${s.title}</strong></td>
+                                    <td style="font-size: 13px; color: #4b5563;">${s.reason}</td>
+                                    <td><span class="aag-badge ${s.priority.toLowerCase()}">${s.priority}</span></td>
+                                    <td>
+                                        <button class="button button-small aag-add-gap-to-queue" data-title="${s.title}">
+                                            Add to Queue
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+                    $('#aag-gap-results').fadeIn();
+                } else {
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).html(originalHtml);
+                showMessage('Connection error during analysis.', 'error');
+            }
+        });
+    });
+
+    // Add suggestion to queue
+    $(document).on('click', '.aag-add-gap-to-queue', function () {
+        const $btn = $(this);
+        const title = $btn.data('title');
+
+        $btn.prop('disabled', true).text('Adding...');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_add_gap_suggestion',
+                nonce: aagAjax.nonce,
+                title: title
+            },
+            success: function (response) {
+                if (response.success) {
+                    $btn.removeClass('button-primary').addClass('button-disabled').text('✅ Added');
+                    showMessage('Added: ' + title, 'success');
+                    // Refresh queue to show the new item
+                    refreshQueue();
+                } else {
+                    $btn.prop('disabled', false).text('Add to Queue');
+                    showMessage('Failed to add: ' + response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('Add to Queue');
+                showMessage('Connection error.', 'error');
+            }
+        });
     });
 
     // Schedule Frequency Toggle
@@ -370,6 +672,7 @@ jQuery(document).ready(function ($) {
 
                 if (response.success) {
                     showMessage(response.data, 'success');
+                    refreshQueue();
                 } else {
                     showMessage('Error: ' + response.data, 'error');
                 }
@@ -583,13 +886,15 @@ jQuery(document).ready(function ($) {
                 // Remove row immediately for snappy feel, then refresh to be sure
                 btn.closest('tr').fadeOut(300, function () {
                     $(this).remove();
-                    // Update count locally if possible, or just wait for refresh
-                    const currentCount = parseInt($('#pending-count').text()) || 0;
-                    if (currentCount > 0) $('#pending-count').text(currentCount - 1);
+                    // Update counts locally for snappiness
+                    const currentCount = parseInt($('#pending-count').first().text()) || 0;
+                    if (currentCount > 0) {
+                        $('#pending-count, #aag-stats-queue-count').text(currentCount - 1);
+                    }
                 });
                 showMessage(response.data, 'success');
-                // Optional: refreshQueue() to ensure consistency if needed
-                // refreshQueue(); 
+                // Also refresh to be sure we are in sync
+                refreshQueue();
             } else {
                 showMessage(response.data || 'Error deleting item', 'error');
                 btn.prop('disabled', false).html(originalHtml);
@@ -666,6 +971,14 @@ jQuery(document).ready(function ($) {
             if (response.success) {
                 updateQueueTable(response.data.items);
                 $('#pending-count').text(response.data.pending_count);
+
+                // Update top statistics cards
+                $('#aag-stats-queue-count').text(response.data.pending_count);
+                if (response.data.usage) {
+                    $('#aag-stats-today-count').text(response.data.usage.today);
+                    $('#aag-stats-month-count').text(response.data.usage.month);
+                    $('#aag-stats-remaining-count').text(response.data.usage.remaining);
+                }
             } else {
                 console.error('AAG: Failed to get queue status:', response.data);
             }

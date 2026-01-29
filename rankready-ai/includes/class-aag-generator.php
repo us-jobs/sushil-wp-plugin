@@ -203,10 +203,14 @@ class AAG_Generator
         // Get and set featured image from Freepik (if API key provided)
         if (!empty($freepik_api_key)) {
             $search_query = $item->keyword ?: $item->title;
-            $image_id = $this->get_freepik_image($search_query, $freepik_api_key);
+            // Use the item title as the fallback filename/title for the image
+            $image_id = $this->get_freepik_image($search_query, $freepik_api_key, $item->title);
 
             if (!is_wp_error($image_id) && $image_id) {
                 set_post_thumbnail($post_id, $image_id);
+
+                // Proactively generate SEO metadata for the new featured image
+                $this->generate_image_seo_metadata($image_id);
             }
         }
 
@@ -838,10 +842,12 @@ class AAG_Generator
         global $wpdb;
         $items = $this->get_queue_items_with_schedule();
         $pending_count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name} WHERE status = 'pending'");
+        $usage_stats = $this->get_usage_stats();
 
         wp_send_json_success(array(
             'items' => $items,
-            'pending_count' => $pending_count
+            'pending_count' => $pending_count,
+            'usage' => $usage_stats
         ));
     }
 
@@ -960,7 +966,7 @@ class AAG_Generator
         return new WP_Error('api_error', 'Failed to generate content from Gemini API. Unexpected response format.');
     }
 
-    public function get_freepik_image($search_query, $api_key)
+    public function get_freepik_image($search_query, $api_key, $item_title = '')
     {
         $this->aag_debug_log("Freepik: Searching for '$search_query'");
 
@@ -1015,8 +1021,9 @@ class AAG_Generator
             return $tmp;
         }
 
+        $filename = !empty($item_title) ? sanitize_title($item_title) : 'freepik-' . time();
         $file_array = array(
-            'name' => 'freepik-' . time() . '.jpg',
+            'name' => $filename . '.jpg',
             'tmp_name' => $tmp
         );
 
@@ -1028,7 +1035,132 @@ class AAG_Generator
             return $image_id;
         }
 
+        // Update the attachment title to match the item title if provided
+        if (!empty($item_title)) {
+            wp_update_post(array(
+                'ID' => $image_id,
+                'post_title' => $item_title
+            ));
+        }
+
         $this->aag_debug_log("Freepik: Successfully attached image ID $image_id");
         return $image_id;
+    }
+
+    /**
+     * Generate and apply SEO metadata for an image.
+     */
+    public function generate_image_seo_metadata($attachment_id)
+    {
+        $api_key = get_option('aag_gemini_api_key');
+        if (empty($api_key)) {
+            return;
+        }
+
+        $file_path = get_attached_file($attachment_id);
+        if (!$file_path || !file_exists($file_path)) {
+            return;
+        }
+
+        $prompt = "Analyze this image and provide:
+1. A concise, SEO-friendly Title (max 60 characters).
+2. A concise, SEO-friendly ALT text (max 125 characters).
+3. A descriptive caption (max 200 characters).
+
+Return ONLY a valid JSON object with keys 'title', 'alt' and 'caption'. No other text.";
+
+        $response = $this->call_gemini_vision_api($prompt, $file_path, $api_key);
+
+        if (is_wp_error($response)) {
+            error_log('AAG SEO Gen Error: ' . $response->get_error_message());
+            return;
+        }
+
+        $json_text = preg_replace('/^```json\s*|\s*```$/i', '', trim($response));
+        $data = json_decode($json_text, true);
+
+        if (is_array($data)) {
+            $title = sanitize_text_field($data['title'] ?? '');
+            $alt = sanitize_text_field($data['alt'] ?? '');
+            $caption = sanitize_text_field($data['caption'] ?? '');
+
+            $update_data = array('ID' => $attachment_id);
+            if (!empty($title)) {
+                $update_data['post_title'] = $title;
+            }
+            if (!empty($caption)) {
+                $update_data['post_excerpt'] = $caption;
+            }
+
+            if (count($update_data) > 1) {
+                wp_update_post($update_data);
+            }
+
+            if (!empty($alt)) {
+                update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt);
+            }
+        }
+    }
+
+    /**
+     * Call Gemini Vision API to analyze images.
+     */
+    public function call_gemini_vision_api($prompt, $image_path, $api_key)
+    {
+        if (!file_exists($image_path)) {
+            return new WP_Error('file_not_found', 'Image file not found: ' . $image_path);
+        }
+
+        $image_data = base64_encode(file_get_contents($image_path));
+        $mime_type = wp_check_filetype($image_path)['type'] ?: 'image/jpeg';
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$api_key}";
+
+        $body = json_encode(array(
+            'contents' => array(
+                array(
+                    'parts' => array(
+                        array('text' => $prompt),
+                        array(
+                            'inline_data' => array(
+                                'mime_type' => $mime_type,
+                                'data' => $image_data
+                            )
+                        )
+                    )
+                )
+            ),
+            'generationConfig' => array(
+                'temperature' => 0.4,
+                'topK' => 1,
+                'topP' => 1,
+                'maxOutputTokens' => 1024
+            )
+        ));
+
+        $response = wp_remote_post($url, array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => $body,
+            'timeout' => 60
+        ));
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $result = json_decode($response_body, true);
+
+        if ($response_code !== 200) {
+            $error_msg = isset($result['error']['message']) ? $result['error']['message'] : 'Unknown Gemini API Error';
+            return new WP_Error('api_error', 'Gemini API Error: ' . $error_msg);
+        }
+
+        if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+            return trim($result['candidates'][0]['content']['parts'][0]['text']);
+        }
+
+        return new WP_Error('api_error', 'Failed to generate content from Gemini Vision API.');
     }
 }

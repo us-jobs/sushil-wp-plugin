@@ -45,10 +45,10 @@ class AAG_Settings
         }
 
         // Updated paths for assets using AAG_PLUGIN_URL constant
-        wp_enqueue_style('aag-admin-style', AAG_PLUGIN_URL . 'assets/css/admin.css', array(), '2.0.1');
-        wp_enqueue_script('aag-admin-script', AAG_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '2.0.1', true);
+        wp_enqueue_style('aag-admin-css', AAG_PLUGIN_URL . 'assets/css/admin.css', array(), '2.0.8');
+        wp_enqueue_script('aag-admin-js', AAG_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '2.0.8', true);
 
-        wp_localize_script('aag-admin-script', 'aagAjax', array(
+        wp_localize_script('aag-admin-js', 'aagAjax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('aag_nonce')
         ));

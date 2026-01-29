@@ -24,6 +24,8 @@ require_once AAG_PLUGIN_DIR . 'includes/class-aag-telemetry.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-generator.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-settings.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-linking.php';
+require_once AAG_PLUGIN_DIR . 'includes/class-aag-image-seo.php';
+require_once AAG_PLUGIN_DIR . 'includes/class-aag-content-gap.php';
 
 // Initialize Plugin
 function aag_init()
@@ -33,6 +35,8 @@ function aag_init()
     $generator = new AAG_Generator($license, $telemetry);
     $settings = new AAG_Settings($generator, $license);
     $linking = new AAG_Linking($generator);
+    $image_seo = new AAG_Image_SEO($generator);
+    $content_gap = new AAG_Content_Gap($generator);
 
     return $generator;
 }
