@@ -133,7 +133,7 @@ class AAG_Settings
         $timezone = sanitize_text_field($_POST['schedule_timezone']);
         update_option('aag_schedule_timezone', $timezone);
 
-        $auto_timezone = (isset($_POST['aag_auto_timezone']) && $_POST['aag_auto_timezone'] == '1') ? '1' : '0';
+        $auto_timezone = filter_var($_POST['aag_auto_timezone'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
         update_option('aag_auto_timezone', $auto_timezone);
 
         if ($frequency === 'custom') {
@@ -299,15 +299,15 @@ class AAG_Settings
         update_option('aag_freepik_api_key', sanitize_text_field($_POST['freepik_api_key']));
 
         update_option('aag_word_count', sanitize_text_field($_POST['target_word_count']));
-        update_option('aag_include_table', (isset($_POST['include_table']) && $_POST['include_table'] == '1') ? '1' : '0');
-        update_option('aag_include_lists', (isset($_POST['include_lists']) && $_POST['include_lists'] == '1') ? '1' : '0');
-        update_option('aag_include_faq', (isset($_POST['include_faq']) && $_POST['include_faq'] == '1') ? '1' : '0');
-        update_option('aag_include_youtube', (isset($_POST['include_youtube']) && $_POST['include_youtube'] == '1') ? '1' : '0');
+        update_option('aag_include_table', filter_var($_POST['include_table'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
+        update_option('aag_include_lists', filter_var($_POST['include_lists'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
+        update_option('aag_include_faq', filter_var($_POST['include_faq'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
+        update_option('aag_include_youtube', filter_var($_POST['include_youtube'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
         if (isset($_POST['article_tone'])) {
             update_option('aag_article_tone', sanitize_text_field($_POST['article_tone']));
         }
-        update_option('aag_article_tone_auto', (isset($_POST['article_tone_auto']) && $_POST['article_tone_auto'] == '1') ? '1' : '0');
-        update_option('aag_enable_auto_linking', (isset($_POST['enable_auto_linking']) && $_POST['enable_auto_linking'] == '1') ? '1' : '0');
+        update_option('aag_article_tone_auto', filter_var($_POST['article_tone_auto'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
+        update_option('aag_enable_auto_linking', filter_var($_POST['enable_auto_linking'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
 
         wp_send_json_success('Article Requirements saved successfully!');
     }
@@ -449,7 +449,7 @@ class AAG_Settings
             wp_send_json_error('Unauthorized');
         }
 
-        update_option('aag_enable_auto_linking', isset($_POST['enable_auto_linking']) ? '1' : '0');
+        update_option('aag_enable_auto_linking', filter_var($_POST['enable_auto_linking'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
 
         wp_send_json_success('Linking settings saved successfully!');
     }
