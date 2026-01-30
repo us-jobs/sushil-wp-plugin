@@ -971,10 +971,10 @@ jQuery(document).ready(function ($) {
         const wordCount = $('#target_word_count').val();
         const geminiApiKey = $('#gemini_api_key').val().trim();
         const freepikApiKey = $('#freepik_api_key').val().trim();
-        const includeTable = $('input[name="include_table"]').is(':checked');
-        const includeLists = $('input[name="include_lists"]').is(':checked');
-        const includeFaq = $('input[name="include_faq"]').is(':checked');
-        const includeYoutube = $('input[name="include_youtube"]').is(':checked');
+        const includeTable = $('input[name="include_table"]').is(':checked') ? 1 : 0;
+        const includeLists = $('input[name="include_lists"]').is(':checked') ? 1 : 0;
+        const includeFaq = $('input[name="include_faq"]').is(':checked') ? 1 : 0;
+        const includeYoutube = $('input[name="include_youtube"]').is(':checked') ? 1 : 0;
         const articleTone = $('#article_tone').val();
         const articleToneAuto = $('#article_tone_auto').is(':checked');
 
