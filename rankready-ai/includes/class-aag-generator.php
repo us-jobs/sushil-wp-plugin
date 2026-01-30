@@ -149,9 +149,7 @@ class AAG_Generator
             $prompt .= " Add a Frequently Asked Questions (FAQ) section at the end.";
         }
 
-        if ($include_youtube === '1') {
-            $prompt .= " Find a relevant, high-quality YouTube video that complements this topic. Include a responsive <iframe> embed code for the video. Place the video embed in a suitable section of the article where it adds the most value (e.g., after an introduction or a key section). Use width=\"100%\" and a standard height for the iframe.";
-        }
+
 
         if ($article_tone_auto === '1') {
             $prompt .= " Choose the most suitable tone (neutral, friendly, professional, persuasive, or technical) based on the topic and target reader, and keep the tone consistent throughout.";
@@ -206,6 +204,27 @@ class AAG_Generator
                 self::aag_debug_log("Appended internal links to content.");
             } else {
                 self::aag_debug_log("No internal links generated or found.");
+            }
+        }
+
+        // --- YouTube Video Embedding (Deterministic) ---
+        if ($include_youtube === '1') {
+            $video_id = $this->get_youtube_video_id($item->title);
+            if ($video_id) {
+                $video_embed = '<div class="aag-video-container" style="margin: 20px 0; text-align: center;">';
+                $video_embed .= '<iframe width="100%" height="450" src="https://www.youtube.com/embed/' . esc_attr($video_id) . '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+                $video_embed .= '</div>';
+
+                // Inject after the first closing paragraph tag
+                $pos = strpos($content, '</p>');
+                if ($pos !== false) {
+                    $content = substr_replace($content, $video_embed, $pos + 4, 0);
+                } else {
+                    $content .= $video_embed;
+                }
+                self::aag_debug_log("YouTube: Embedded video ID $video_id");
+            } else {
+                self::aag_debug_log("YouTube: No video found for title '{$item->title}'");
             }
         }
 
@@ -1187,6 +1206,28 @@ class AAG_Generator
         }
 
         return new WP_Error('api_error', 'Failed to generate content from Gemini API. Unexpected response format.');
+    }
+
+    private function get_youtube_video_id($query)
+    {
+        $url = 'https://www.youtube.com/results?search_query=' . urlencode($query);
+        $response = wp_remote_get($url, array(
+            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        ));
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+
+        // Regex to find video ID
+        // Look for "videoId":"..." pattern which is standard in YouTube's initial data
+        if (preg_match('/"videoId":"([a-zA-Z0-9_-]{11})"/', $body, $matches)) {
+            return $matches[1];
+        }
+
+        return false;
     }
 
     public function get_freepik_image($search_query, $api_key, $item_title = '')
