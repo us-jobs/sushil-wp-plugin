@@ -349,7 +349,7 @@
                         </select>
                         <label style="margin-left:10px;">
                             <input type="checkbox" id="article_tone_auto" name="article_tone_auto" value="1" <?php checked($article_tone_auto, '1'); ?>>
-                            Let AI decide most suitable article tone
+                            Let RankReadyAI decide most suitable article tone
                         </label>
                         <p class="description">Controls the tone of voice used in generated articles.</p>
                     </td>
