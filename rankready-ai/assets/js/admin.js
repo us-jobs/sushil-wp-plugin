@@ -598,8 +598,34 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('keydown', function (e) {
-        if (e.key === 'Escape' && $licenseModal.is(':visible')) {
-            $licenseModal.fadeOut(300);
+        if (e.key === 'Escape') {
+            if ($licenseModal.is(':visible')) {
+                $licenseModal.fadeOut(300);
+            }
+            if ($('#aag-coming-soon-modal').is(':visible')) {
+                $('#aag-coming-soon-modal').fadeOut(300);
+            }
+        }
+    });
+
+    // Coming Soon Modal Logic
+    const $comingSoonModal = $('#aag-coming-soon-modal');
+    const $comingSoonTrigger = $('#aag-coming-soon-trigger');
+    const $comingSoonClose = $comingSoonModal.find('.aag-modal-close');
+
+    $comingSoonTrigger.on('click', function (e) {
+        e.preventDefault();
+        console.log('AAG: Opening coming soon modal');
+        $comingSoonModal.fadeIn(300).css('display', 'flex');
+    });
+
+    $comingSoonClose.on('click', function () {
+        $comingSoonModal.fadeOut(300);
+    });
+
+    $(window).on('click', function (e) {
+        if ($(e.target).is($comingSoonModal)) {
+            $comingSoonModal.fadeOut(300);
         }
     });
 

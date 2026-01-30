@@ -1,6 +1,9 @@
 <div class="wrap aag-container">
     <h1>RankReady AI - Human Like Content Generator</h1>
-    <div class="aag-header-action">
+    <div class="aag-header-action" style="display: flex; gap: 10px;">
+        <a href="#" class="aag-coming-soon-btn" id="aag-coming-soon-trigger">
+            <span class="dashicons dashicons-megaphone"></span> Coming Soon
+        </a>
         <a href="#" class="aag-upgrade-trigger-btn <?php echo $is_premium ? 'is-active-premium' : ''; ?>"
             id="aag-license-modal-trigger">
             <?php if ($is_premium): ?>
@@ -11,6 +14,45 @@
         </a>
     </div>
     <?php $is_free_tier = !$is_premium && !$trial_active; ?>
+
+    <!-- Coming Soon Modal -->
+    <div id="aag-coming-soon-modal" class="aag-modal-overlay">
+        <div class="aag-modal-container">
+            <div class="aag-modal-close">
+                <span class="dashicons dashicons-no-alt"></span>
+            </div>
+            <div class="aag-modal-content">
+                <div class="aag-modal-header">
+                    <h2>🚀 Exciting Features Coming Soon!</h2>
+                </div>
+                <div class="aag-modal-body">
+                    <ul class="aag-feature-list">
+                        <li>
+                            <div class="aag-feature-icon">
+                                <span class="dashicons dashicons-format-gallery"></span>
+                            </div>
+                            <div class="aag-feature-details">
+                                <h3>Celebrity Image Generation</h3>
+                                <p>Generate high-quality, AI-powered images of celebrities for your entertainment and news content.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="aag-feature-icon">
+                                <span class="dashicons dashicons-google"></span>
+                            </div>
+                            <div class="aag-feature-details">
+                                <h3>Instant Google Indexing</h3>
+                                <p>Get your standard posts (non-JobPosting/BroadcastEvent) indexed on Google faster than ever before.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="aag-modal-footer">
+                        <p>Stay tuned for updates!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Trial/License Status Banner -->
     <div class="aag-license-banner">

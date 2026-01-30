@@ -104,6 +104,94 @@
     background: #059669 !important;
 }
 
+/* Coming Soon Button */
+.aag-coming-soon-btn {
+    background: #FF8800 !important;
+    /* Orange */
+    color: #fff !important;
+    padding: 8px 20px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    border: none !important;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(255, 136, 0, 0.2);
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: auto !important;
+    line-height: normal !important;
+    text-decoration: none !important;
+}
+
+.aag-coming-soon-btn:hover {
+    background: #FF6600 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 136, 0, 0.3);
+    color: #fff !important;
+}
+
+/* Modal Feature List */
+.aag-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.aag-feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.aag-feature-icon {
+    background: #e0f2fe;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.aag-feature-icon .dashicons {
+    color: #0284c7;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.aag-feature-details h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+.aag-feature-details p {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.aag-modal-header h2 {
+    margin-top: 0;
+    color: #1e293b;
+    text-align: center;
+}
+
+.aag-modal-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #64748b;
+    font-style: italic;
+}
+
 .aag-container {
     max-width: 1200px;
     margin: 20px 0;
