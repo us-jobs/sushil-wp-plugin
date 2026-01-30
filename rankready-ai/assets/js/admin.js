@@ -1370,6 +1370,28 @@ jQuery(document).ready(function ($) {
         refreshQueue();
     }, 500);
 
+    // --- API Key Visibility Toggle ---
+    $(document).on('click', '.aag-eye-toggle', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('AAG: Eye toggle clicked for:', $(this).data('target'));
+        const targetId = $(this).data('target');
+        const $input = $('#' + targetId);
+        const $icon = $(this);
+
+        console.log('AAG: Current input type:', $input.attr('type'));
+
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.removeClass('dashicons-visibility').addClass('dashicons-hidden');
+            console.log('AAG: Switched to text');
+        } else {
+            $input.attr('type', 'password');
+            $icon.removeClass('dashicons-hidden').addClass('dashicons-visibility');
+            console.log('AAG: Switched to password');
+        }
+    });
+
     // Add debug info
     console.log('AAG: Script initialization complete');
     console.log('AAG: aagAjax object:', aagAjax);

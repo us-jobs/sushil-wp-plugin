@@ -853,3 +853,46 @@
     max-width: 24px !important;
     max-height: 24px !important;
 }
+
+/* API Key Masking/Blurring */
+.aag-api-key-wrapper {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* API Key Masking & Toggle */
+.aag-api-key-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.aag-api-key-wrapper input.regular-text,
+.aag-api-key-wrapper input.large-text {
+    padding-right: 40px !important;
+    width: 100%;
+}
+
+.aag-eye-toggle {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    color: #888;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    user-select: none;
+    z-index: 100;
+    pointer-events: auto !important;
+}
+
+.aag-eye-toggle:hover {
+    color: #2271b1;
+}

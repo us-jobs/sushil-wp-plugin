@@ -365,8 +365,12 @@
                                     Google Gemini API key here to enable content
                                     generation.</span></span></label></th>
                     <td>
-                        <input type="text" id="gemini_api_key" name="gemini_api_key"
-                            value="<?php echo esc_attr($gemini_api_key); ?>" class="regular-text">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="gemini_api_key" name="gemini_api_key"
+                                value="<?php echo esc_attr($gemini_api_key); ?>" class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="gemini_api_key"></span>
+                        </div>
                         <p class="description">Get your API key from <a href="https://makersuite.google.com/app/apikey"
                                 target="_blank">Google AI Studio</a></p>
                     </td>
@@ -378,8 +382,12 @@
                                     class="aag-tooltip-text">Enter your Freepik API key if you want to automatically add
                                     featured images.</span></span></label></th>
                     <td>
-                        <input type="text" id="freepik_api_key" name="freepik_api_key"
-                            value="<?php echo esc_attr($freepik_api_key); ?>" class="regular-text">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="freepik_api_key" name="freepik_api_key"
+                                value="<?php echo esc_attr($freepik_api_key); ?>" class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="freepik_api_key"></span>
+                        </div>
                         <button type="button" id="aag-test-freepik-btn" class="button">Test Connection</button>
                         <span id="freepik-test-result"></span>
                         <p class="description">Get your API key from <a href="https://www.freepik.com/api"
@@ -415,17 +423,25 @@
                 <tr>
                     <th><label for="onesignal_app_id">OneSignal App ID</label></th>
                     <td>
-                        <input type="text" id="onesignal_app_id" name="onesignal_app_id"
-                            value="<?php echo esc_attr(get_option('aag_onesignal_app_id', '')); ?>" class="regular-text"
-                            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="onesignal_app_id" name="onesignal_app_id"
+                                value="<?php echo esc_attr(get_option('aag_onesignal_app_id', '')); ?>"
+                                class="regular-text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="onesignal_app_id"></span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
                     <th><label for="onesignal_rest_api_key">REST API Key</label></th>
                     <td>
-                        <input type="password" id="onesignal_rest_api_key" name="onesignal_rest_api_key"
-                            value="<?php echo esc_attr(get_option('aag_onesignal_rest_api_key', '')); ?>"
-                            class="regular-text">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="onesignal_rest_api_key" name="onesignal_rest_api_key"
+                                value="<?php echo esc_attr(get_option('aag_onesignal_rest_api_key', '')); ?>"
+                                class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="onesignal_rest_api_key"></span>
+                        </div>
                         <p class="description">Found in OneSignal Dashboard -> Settings -> Keys & IDs.</p>
                     </td>
                 </tr>
@@ -445,15 +461,25 @@
                 <tr>
                     <th><label for="webpushr_key">Webpushr Key</label></th>
                     <td>
-                        <input type="text" id="webpushr_key" name="webpushr_key"
-                            value="<?php echo esc_attr(get_option('aag_webpushr_key', '')); ?>" class="regular-text">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="webpushr_key" name="webpushr_key"
+                                value="<?php echo esc_attr(get_option('aag_webpushr_key', '')); ?>"
+                                class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="webpushr_key"></span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
                     <th><label for="webpushr_token">Auth Token</label></th>
                     <td>
-                        <input type="password" id="webpushr_token" name="webpushr_token"
-                            value="<?php echo esc_attr(get_option('aag_webpushr_token', '')); ?>" class="regular-text">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="webpushr_token" name="webpushr_token"
+                                value="<?php echo esc_attr(get_option('aag_webpushr_token', '')); ?>"
+                                class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="webpushr_token"></span>
+                        </div>
                         <p class="description">Found in Webpushr Dashboard -> API Access.</p>
                     </td>
                 </tr>
@@ -727,9 +753,13 @@
                 <tr>
                     <th><label for="telegram_bot_token">Telegram Bot Token</label></th>
                     <td>
-                        <input type="text" id="telegram_bot_token" name="telegram_bot_token"
-                            value="<?php echo esc_attr(get_option('aag_telegram_bot_token', '')); ?>"
-                            class="regular-text" placeholder="123456789:ABCDefgh...">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="telegram_bot_token" name="telegram_bot_token"
+                                value="<?php echo esc_attr(get_option('aag_telegram_bot_token', '')); ?>"
+                                class="regular-text" placeholder="123456789:ABCDefgh...">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="telegram_bot_token"></span>
+                        </div>
                         <p class="description">Create a bot via <a href="https://t.me/botfather"
                                 target="_blank">@BotFather</a> to get your token.</p>
                     </td>
@@ -763,9 +793,13 @@
                 <tr>
                     <th><label for="discord_webhook_url">Discord Webhook URL</label></th>
                     <td>
-                        <input type="url" id="discord_webhook_url" name="discord_webhook_url"
-                            value="<?php echo esc_attr(get_option('aag_discord_webhook_url', '')); ?>"
-                            class="large-text" placeholder="https://discord.com/api/webhooks/...">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="discord_webhook_url" name="discord_webhook_url"
+                                value="<?php echo esc_attr(get_option('aag_discord_webhook_url', '')); ?>"
+                                class="large-text" placeholder="https://discord.com/api/webhooks/...">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="discord_webhook_url"></span>
+                        </div>
                         <p class="description">Go to Channel Settings -> Integrations -> Webhooks to create one.</p>
                     </td>
                 </tr>
@@ -788,9 +822,13 @@
                 <tr>
                     <th><label for="ayrshare_api_key">Ayrshare API Key</label></th>
                     <td>
-                        <input type="password" id="ayrshare_api_key" name="ayrshare_api_key"
-                            value="<?php echo esc_attr(get_option('aag_ayrshare_api_key', '')); ?>" class="large-text"
-                            placeholder="API Key from Ayrshare Dashboard">
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="ayrshare_api_key" name="ayrshare_api_key"
+                                value="<?php echo esc_attr(get_option('aag_ayrshare_api_key', '')); ?>"
+                                class="large-text" placeholder="API Key from Ayrshare Dashboard">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="ayrshare_api_key"></span>
+                        </div>
                         <p class="description">Get your API Key from the Ayrshare Dashboard -> API Key section.</p>
                     </td>
                 </tr>
@@ -892,15 +930,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                                                                                                                            <?php
-                                                                                                                                            if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                                                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                                                                                                echo esc_html($masked_key);
-                                                                                                                                            } else {
-                                                                                                                                                echo '********';
-                                                                                                                                            }
-                                                                                                                                            ?>
-                                                                                                                                        </code>
+                                                                                                                                                    <?php
+                                                                                                                                                    if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                                                                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                                                                                                        echo esc_html($masked_key);
+                                                                                                                                                    } else {
+                                                                                                                                                        echo '********';
+                                                                                                                                                    }
+                                                                                                                                                    ?>
+                                                                                                                                                </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>
@@ -980,8 +1018,13 @@
                         <p>Enter the license key you received via email.</p>
                         <form id="aag-license-form">
                             <div style="display:flex; gap:10px; max-width:400px;">
-                                <input type="text" id="license_key" name="license_key" class="regular-text"
-                                    placeholder="Enter License Key (e.g. PREMIUM-XXX)" required>
+                                <div class="aag-api-key-wrapper" style="flex-grow: 1;">
+                                    <input type="password" id="license_key" name="license_key" class="regular-text"
+                                        style="width: 100%; max-width: none;"
+                                        placeholder="Enter License Key (e.g. PREMIUM-XXX)" required>
+                                    <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                        data-target="license_key"></span>
+                                </div>
                                 <button type="submit" class="button button-primary">Activate</button>
                             </div>
                         </form>
