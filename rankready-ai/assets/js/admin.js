@@ -29,6 +29,18 @@ jQuery(document).ready(function ($) {
         $('#feature-' + featureId).addClass('active');
     });
 
+    // Methods Sub-tab switching
+    $(document).on('click', '.aag-method-nav-item', function () {
+        const methodId = $(this).data('method');
+        console.log('AAG: Switching to method:', methodId);
+
+        $('.aag-method-nav-item').removeClass('active');
+        $(this).addClass('active');
+
+        $('.aag-method-content').removeClass('active');
+        $('#method-' + methodId).addClass('active');
+    });
+
     // --- Image SEO Section Functions ---
 
     function renderImageScanResults(images) {
@@ -549,8 +561,15 @@ jQuery(document).ready(function ($) {
     // Navigation Buttons (Settings -> Methods)
     $('.aag-nav-btn').on('click', function () {
         const targetTab = $(this).data('target');
-        console.log('AAG: Navigation to tab:', targetTab);
+        const subTab = $(this).data('sub');
+        console.log('AAG: Navigation to tab:', targetTab, 'Sub-tab:', subTab);
         $('.aag-tab-btn[data-tab="' + targetTab + '"]').click();
+
+        if (targetTab === 'methods' && subTab) {
+            $('.aag-method-nav-item[data-method="' + subTab + '"]').click();
+        } else if (targetTab === 'features' && subTab) {
+            $('.aag-feature-nav-item[data-feature="' + subTab + '"]').click();
+        }
     });
 
     $('#settings_submit_btn').on('click', function () {
