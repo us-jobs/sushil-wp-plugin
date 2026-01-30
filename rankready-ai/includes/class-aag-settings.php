@@ -27,6 +27,7 @@ class AAG_Settings
         add_action('wp_ajax_aag_test_freepik', array($this, 'test_freepik'));
         add_action('wp_ajax_aag_save_traffic', array($this, 'save_traffic'));
         add_action('wp_ajax_aag_save_notifications', array($this, 'save_notifications'));
+        add_action('wp_ajax_aag_save_linking', array($this, 'save_linking'));
 
         // Refresher actions
         add_action('wp_ajax_aag_scan_old_articles', array($this, 'scan_old_articles'));
@@ -306,6 +307,7 @@ class AAG_Settings
             update_option('aag_article_tone', sanitize_text_field($_POST['article_tone']));
         }
         update_option('aag_article_tone_auto', isset($_POST['article_tone_auto']) ? '1' : '0');
+        update_option('aag_enable_auto_linking', isset($_POST['enable_auto_linking']) ? '1' : '0');
 
         wp_send_json_success('Article Requirements saved successfully!');
     }
@@ -438,5 +440,17 @@ class AAG_Settings
         }
 
         wp_send_json_success('Notification settings saved successfully!');
+    }
+
+    public function save_linking()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        update_option('aag_enable_auto_linking', isset($_POST['enable_auto_linking']) ? '1' : '0');
+
+        wp_send_json_success('Linking settings saved successfully!');
     }
 }

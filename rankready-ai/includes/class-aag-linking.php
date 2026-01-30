@@ -86,7 +86,7 @@ class AAG_Linking
         }
 
         $prompt = "You are an SEO expert. Below is the content of a new blog post.\n\n" .
-            "CONENT:\n{$content}\n\n" .
+            "CONTENT:\n{$content}\n\n" .
             "Here is a list of existing blog posts on the same website:\n{$post_list}\n\n" .
             "Based on the content of the new post, suggest 3-5 existing posts that would be highly relevant to link to. " .
             "For each suggestion, provide the title and the URL exactly as provided. " .
@@ -131,6 +131,51 @@ class AAG_Linking
             );
         }
 
+        AAG_Generator::aag_debug_log("Found " . count($result) . " existing posts for linking.");
         return $result;
+    }
+
+    /**
+     * Get internal link suggestions formatted as HTML for automated posting.
+     */
+    public function get_auto_internal_links_html($content)
+    {
+        // Get existing posts
+        $existing_posts = $this->get_existing_posts();
+
+        if (empty($existing_posts)) {
+            AAG_Generator::aag_debug_log("Linking Error: No existing posts found to link to.");
+            return '';
+        }
+
+        // Call Gemini
+        $suggestions = $this->fetch_suggestions_from_ai($content, $existing_posts);
+
+        if (is_wp_error($suggestions)) {
+            AAG_Generator::aag_debug_log("Linking Error: Gemini call failed: " . $suggestions->get_error_message());
+            return '';
+        }
+
+        if (empty($suggestions)) {
+            AAG_Generator::aag_debug_log("Linking Error: Gemini returned no suggestions.");
+            return '';
+        }
+
+        AAG_Generator::aag_debug_log("Successfully fetched " . count($suggestions) . " link suggestions.");
+
+        $html = '<div class="aag-related-articles" style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #2271b1; border-radius: 4px;">';
+        $html .= '<h3 style="margin-top: 0; margin-bottom: 15px;">Related Articles</h3>';
+        $html .= '<ul style="margin: 0; padding-left: 20px;">';
+
+        foreach ($suggestions as $suggestion) {
+            if (isset($suggestion['title']) && isset($suggestion['url'])) {
+                $html .= '<li style="margin-bottom: 10px;"><a href="' . esc_url($suggestion['url']) . '" style="color: #2271b1; text-decoration: none; font-weight: 500;">' . esc_html($suggestion['title']) . '</a></li>';
+            }
+        }
+
+        $html .= '</ul>';
+        $html .= '</div>';
+
+        return $html;
     }
 }

@@ -1370,6 +1370,43 @@ jQuery(document).ready(function ($) {
         refreshQueue();
     }, 500);
 
+    // Handle Linking Settings Submission
+    $('#aag-linking-settings-form').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type="submit"]');
+        const $spinner = $form.find('.spinner');
+
+        $btn.prop('disabled', true);
+        $spinner.addClass('is-active');
+
+        const formData = new FormData(this);
+        formData.append('action', 'aag_save_linking');
+        formData.append('nonce', aagAjax.nonce);
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                $btn.prop('disabled', false);
+                $spinner.removeClass('is-active');
+                if (response.success) {
+                    showMessage(response.data, 'success');
+                } else {
+                    showMessage(response.data, 'error');
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false);
+                $spinner.removeClass('is-active');
+                showMessage('An error occurred while saving.', 'error');
+            }
+        });
+    });
+
     // --- API Key Visibility Toggle ---
     $(document).on('click', '.aag-eye-toggle', function (e) {
         e.preventDefault();

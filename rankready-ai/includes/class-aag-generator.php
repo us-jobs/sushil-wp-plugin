@@ -10,6 +10,7 @@ class AAG_Generator
     public $usage_table;
     private $license;
     private $telemetry;
+    private $linking;
 
     public function __construct($license, $telemetry = null)
     {
@@ -29,6 +30,11 @@ class AAG_Generator
 
         // Initialize schedule on plugin load
         add_action('init', array($this, 'maybe_reschedule'));
+    }
+
+    public function set_linking($linking)
+    {
+        $this->linking = $linking;
     }
 
     public function maybe_reschedule()
@@ -171,6 +177,16 @@ class AAG_Generator
 
         $content = $this->call_gemini_api($prompt, $gemini_api_key, 500);
 
+        if (is_wp_error($content)) {
+            $wpdb->update($this->table_name, array(
+                'status' => 'failed',
+                'error_message' => $content->get_error_message(),
+                'processed_at' => current_time('mysql')
+            ), array('id' => $item->id));
+
+            return $content;
+        }
+
         $content = preg_replace('/^```\s*/i', '', trim($content));
         $content = preg_replace('/```$/', '', $content);
 
@@ -180,19 +196,22 @@ class AAG_Generator
         // Safety fallback: Split any long paragraphs
         $content = $this->split_long_paragraphs($content);
 
+        // --- Automated Internal Linking ---
+        self::aag_debug_log("Checking Auto-Linking... Setting: " . get_option('aag_enable_auto_linking', '1'));
+        if ($this->linking && get_option('aag_enable_auto_linking', '1') === '1') {
+            self::aag_debug_log("Attempting to get auto internal links...");
+            $links_html = $this->linking->get_auto_internal_links_html($content);
+            if ($links_html) {
+                $content .= "\n\n" . $links_html;
+                self::aag_debug_log("Appended internal links to content.");
+            } else {
+                self::aag_debug_log("No internal links generated or found.");
+            }
+        }
+
         // Ensure all tags are properly balanced to prevent UI breaks
         if (function_exists('force_balance_tags')) {
             $content = force_balance_tags($content);
-        }
-
-        if (is_wp_error($content)) {
-            $wpdb->update($this->table_name, array(
-                'status' => 'failed',
-                'error_message' => $content->get_error_message(),
-                'processed_at' => current_time('mysql')
-            ), array('id' => $item->id));
-
-            return $content;
         }
 
         // Create post
@@ -486,7 +505,7 @@ class AAG_Generator
 
     public static function aag_debug_log($message)
     {
-        $log_file = plugin_dir_path(dirname(__FILE__)) . 'aag_debug.log';
+        $log_file = dirname(dirname(__FILE__)) . '/aag_debug.log';
         $timestamp = current_time('mysql');
         $entry = "[{$timestamp}] {$message}\n";
         file_put_contents($log_file, $entry, FILE_APPEND);
@@ -1094,7 +1113,7 @@ class AAG_Generator
 
     public function call_gemini_api($prompt, $api_key, $min_length = 100)
     {
-        // Use the stable 1.5-flash modelgemini-2.5
+        // Use the stable 2.5-flash model
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$api_key}";
 
         $body = json_encode(array(

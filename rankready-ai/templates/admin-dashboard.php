@@ -6,7 +6,7 @@
             <?php if ($is_premium): ?>
                 <span class="dashicons dashicons-star-filled"></span> Premium Active
             <?php else: ?>
-                <span class="dashicons dashicons-admin-network"></span> Upgrade to Premium
+                <span class="dashicons dashicons-admin-network"></span> Upgrade
             <?php endif; ?>
         </a>
     </div>
@@ -62,7 +62,7 @@
         <button class="aag-tab-btn" data-tab="queue">Article Status</button>
         <button class="aag-tab-btn" data-tab="traffic">Get Traffic</button>
         <button class="aag-tab-btn" data-tab="notifications">Notifications</button>
-        <button class="aag-tab-btn aag-features-tab-btn" data-tab="features">SEO</button>
+        <button class="aag-tab-btn aag-features-tab-btn" data-tab="features">Features</button>
     </div>
 
     <!-- Settings Tab -->
@@ -523,23 +523,27 @@
                         <p>This feature helps you maintain a healthy internal link structure by suggesting relevant
                             posts from your site as you write new content.</p>
 
-                        <div class="aag-feature-box">
-                            <div class="feature-icon"><span class="dashicons dashicons-admin-links"></span></div>
-                            <div class="feature-text">
-                                <h3>How it works</h3>
-                                <ul>
-                                    <li>Open any post in the WordPress editor.</li>
-                                    <li>Look for the <strong>RankReady AI Linking</strong> sidebar icon on the top
-                                        right.</li>
-                                    <li>Click "Get Relevant Links" to see suggestions based on your current text.</li>
-                                    <li>Easily insert suggested links into your content with one click.</li>
-                                </ul>
+                        <form id="aag-linking-settings-form">
+                            <div class="aag-setting-row">
+                                <label class="aag-switch">
+                                    <input type="checkbox" name="enable_auto_linking" id="aag_enable_auto_linking" 
+                                        <?php checked(get_option('aag_enable_auto_linking', '1'), '1'); ?>>
+                                    <span class="slider round"></span>
+                                </label>
+                                <div class="aag-setting-info">
+                                    <strong>Enable Automated Internal Linking</strong>
+                                    <p>Automatically append 3-5 relevant articles from your site to the end of every AI-generated post.</p>
+                                </div>
                             </div>
-                        </div>
+                            
+                            <div style="margin-top: 20px;">
+                                <button type="submit" class="button button-primary">Save Linking Settings</button>
+                                <span class="spinner"></span>
+                            </div>
+                        </form>
 
                         <div class="notice notice-info inline" style="margin-top: 20px;">
-                            <p>This feature is automatically enabled for all posts. You just need to have your Gemini
-                                API key configured in the <strong>Article Requirements</strong> tab.</p>
+                            <p><strong>Note:</strong> This feature uses the Gemini API to analyze your content and find the most relevant existing posts. Make sure your Gemini API key is configured correctly.</p>
                         </div>
                     </div>
                 </div>
@@ -930,15 +934,15 @@
                     <hr>
                     <p>License Key:
                         <code>
-                                                                                                                                                    <?php
-                                                                                                                                                    if (!empty($license_key) && strlen($license_key) > 8) {
-                                                                                                                                                        $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
-                                                                                                                                                        echo esc_html($masked_key);
-                                                                                                                                                    } else {
-                                                                                                                                                        echo '********';
-                                                                                                                                                    }
-                                                                                                                                                    ?>
-                                                                                                                                                </code>
+                                                                                                                                                            <?php
+                                                                                                                                                            if (!empty($license_key) && strlen($license_key) > 8) {
+                                                                                                                                                                $masked_key = substr($license_key, 0, 4) . str_repeat('X', strlen($license_key) - 8) . substr($license_key, -4);
+                                                                                                                                                                echo esc_html($masked_key);
+                                                                                                                                                            } else {
+                                                                                                                                                                echo '********';
+                                                                                                                                                            }
+                                                                                                                                                            ?>
+                                                                                                                                                        </code>
                     </p>
                     <p class="description" style="margin-top: 5px;">
                         This license key was sent to your email ID. <br>
