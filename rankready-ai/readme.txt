@@ -29,5 +29,9 @@ Yes, you will need to configure your respective (completely free) API keys for A
 
 == Changelog ==
 
+= 1.1.1 =
+* Fixed fatal error in settings class.
+* Improved error handling.
+
 = 1.1.0 =
 * Initial release.

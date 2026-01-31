@@ -11,11 +11,13 @@ class AAG_Generator
     private $license;
     private $telemetry;
     private $linking;
+    private $youtube_fetcher;
 
-    public function __construct($license, $telemetry = null)
+    public function __construct($license, $telemetry = null, $youtube_fetcher = null)
     {
         $this->license = $license;
         $this->telemetry = $telemetry;
+        $this->youtube_fetcher = $youtube_fetcher;
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'aag_queue';
         $this->usage_table = $wpdb->prefix . 'aag_usage';
@@ -105,10 +107,43 @@ class AAG_Generator
         }
 
         // Generate article content
-        $prompt = "Write a comprehensive, SEO-optimized blog article with the title: '{$item->title}'.";
+        $source_transcript = '';
+        $video_id_for_embed = '';
 
-        if (!empty($item->keywords_to_include)) {
-            $prompt .= " Make sure to naturally incorporate these keywords throughout the article: {$item->keywords_to_include}.";
+        // Check if this is a YouTube Video item (stored URL in keyword)
+        if (filter_var($item->keyword, FILTER_VALIDATE_URL) && (strpos($item->keyword, 'youtube.com') !== false || strpos($item->keyword, 'youtu.be') !== false)) {
+            // It's a method 3 item
+            if (!$this->youtube_fetcher) {
+                return new WP_Error('fetcher_error', 'YouTube Fetcher not initialized');
+            }
+
+            $transcript = $this->youtube_fetcher->get_transcript($item->keyword);
+
+            if (is_wp_error($transcript)) {
+                $wpdb->update($this->table_name, array(
+                    'status' => 'failed',
+                    'error_message' => 'Transcript fetch failed: ' . $transcript->get_error_message(),
+                    'processed_at' => current_time('mysql')
+                ), array('id' => $item->id));
+                return $transcript;
+            }
+
+            $source_transcript = $transcript;
+
+            // Extract video ID for embedding
+            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $item->keyword, $matches);
+            if (isset($matches[1])) {
+                $video_id_for_embed = $matches[1];
+            }
+
+            $prompt = "Write a comprehensive, SEO-optimized blog article based on the following YouTube video transcript. \n\nTRANSCRIPT:\n" . substr($source_transcript, 0, 15000) . "\n\n"; // Limit transcript length to avoid token limits
+            $prompt .= "The title of the article should be catchy and relevant to the transcript content.";
+        } else {
+            // Normal Method 1/2
+            $prompt = "Write a comprehensive, SEO-optimized blog article with the title: '{$item->title}'.";
+            if (!empty($item->keywords_to_include)) {
+                $prompt .= " Make sure to naturally incorporate these keywords throughout the article: {$item->keywords_to_include}.";
+            }
         }
 
         // Get Requirements & Enforce Limits
@@ -208,7 +243,21 @@ class AAG_Generator
         }
 
         // --- YouTube Video Embedding (Deterministic) ---
-        if ($include_youtube === '1') {
+        // If method 3, force embed the source video
+        if (!empty($video_id_for_embed)) {
+            $video_embed = '<div class="aag-video-container" style="margin: 20px 0; text-align: center;">';
+            $video_embed .= '<iframe width="100%" height="450" src="https://www.youtube.com/embed/' . esc_attr($video_id_for_embed) . '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+            $video_embed .= '</div>';
+
+            // Inject after introduction
+            $pos = strpos($content, '</p>');
+            if ($pos !== false) {
+                $content = substr_replace($content, $video_embed, $pos + 4, 0);
+            } else {
+                $content .= $video_embed;
+            }
+            self::aag_debug_log("YouTube (Method 3): Embedded source video ID $video_id_for_embed");
+        } elseif ($include_youtube === '1') {
             $video_id = $this->get_youtube_video_id($item->title);
             if ($video_id) {
                 $video_embed = '<div class="aag-video-container" style="margin: 20px 0; text-align: center;">';
@@ -800,6 +849,37 @@ class AAG_Generator
 
             // Generate titles from keyword
             $this->generate_titles_from_keyword($main_keyword, $force ? 1 : 5);
+
+        } elseif ($method === 'method3') {
+            $videos_raw = get_option('aag_method3_videos', '');
+            $videos_array = array_filter(array_map('trim', explode("\n", $videos_raw)));
+
+            if (empty($videos_array)) {
+                self::aag_debug_log("Method 3: No videos found for queue.");
+                return;
+            }
+
+            foreach ($videos_array as $video_url) {
+                if (empty($video_url))
+                    continue;
+
+                // Check if already in queue by checking if keyword field stores the URL (we'll use keyword field for URL)
+                $exists = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$this->table_name} WHERE keyword = %s", // utilizing keyword column to store video URL
+                    $video_url
+                ));
+
+                if ($exists)
+                    continue;
+
+                // Just queue it. Logic in process_item will handle title refinement.
+                $wpdb->insert($this->table_name, array(
+                    'title' => 'Video Repurpose: ' . $video_url, // Temporary title
+                    'keyword' => $video_url, // Storing URL in keyword column
+                    'status' => 'pending',
+                    'created_at' => current_time('mysql')
+                ));
+            }
         }
     }
 

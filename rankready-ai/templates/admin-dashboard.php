@@ -126,12 +126,14 @@
                                 Based</option>
                             <option value="method2" <?php selected(get_option('aag_gen_method'), 'method2'); ?>>Keyword
                                 Based</option>
+                            <option value="method3" disabled>Video to Blog (YouTube) - Coming Soon</option>
                         </select>
                         <div style="margin-top: 10px;">
                             <button type="button" class="button aag-nav-btn" data-target="methods" data-sub="title">Go to Title
                                 Based Settings</button>
                             <button type="button" class="button aag-nav-btn" data-target="methods" data-sub="keyword">Go to Keyword
                                 Based Settings</button>
+                            <button type="button" class="button aag-nav-btn" disabled>Go to Video to Blog Settings</button>
                         </div>
                     </td>
                 </tr>
@@ -293,6 +295,10 @@
                     <span class="dashicons dashicons-admin-site-alt3"></span>
                     <span>Keyword Based</span>
                 </div>
+                <div class="aag-method-nav-item" data-method="video">
+                    <span class="dashicons dashicons-video-alt3"></span>
+                    <span>Video to Blog (Coming Soon)</span>
+                </div>
             </div>
 
             <!-- Content Area for Methods -->
@@ -337,6 +343,16 @@
                                 <button type="submit" class="button button-primary">Save Keyword Source</button>
                             </p>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Video to Blog Method -->
+                <div class="aag-method-content" id="method-video">
+                    <div class="aag-card" style="text-align: center; padding: 40px;">
+                        <span class="dashicons dashicons-video-alt3" style="font-size: 64px; height: 64px; width: 64px; color: #ccc;"></span>
+                        <h2>Video to Blog Source (YouTube)</h2>
+                        <h3 style="color: #666;">COMING SOON</h3>
+                        <p>We are fine-tuning this feature to bring you the best experience. Stay tuned!</p>
                     </div>
                 </div>
             </div>
@@ -458,6 +474,22 @@
                         <span id="freepik-test-result"></span>
                         <p class="description">Get your API key from <a href="https://www.freepik.com/api"
                                 target="_blank">Freepik API</a> (Leave empty to skip images)</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="youtube_api_key">YouTube API Key (Optional) <span
+                                class="aag-tooltip-container"><span
+                                    class="aag-help-icon dashicons dashicons-editor-help"></span><span
+                                    class="aag-tooltip-text">Required for fetching videos from a channel and fetching transcripts.</span></span></label></th>
+                    <td>
+                        <div class="aag-api-key-wrapper">
+                            <input type="password" id="youtube_api_key" name="youtube_api_key"
+                                value="<?php echo esc_attr(get_option('aag_youtube_api_key', '')); ?>" class="regular-text">
+                            <span class="dashicons dashicons-visibility aag-eye-toggle"
+                                data-target="youtube_api_key"></span>
+                        </div>
+                        <p class="description">Get your API key from <a href="https://console.cloud.google.com/apis/credentials"
+                                target="_blank">Google Cloud Console</a> (Enable YouTube Data API v3)</p>
                     </td>
                 </tr>
                 </table>

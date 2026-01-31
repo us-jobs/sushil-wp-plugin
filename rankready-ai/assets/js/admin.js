@@ -958,6 +958,102 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // Fetch YouTube Videos (Method 3)
+    $(document).on('click', '#aag-fetch-videos-btn', function (e) {
+        e.preventDefault();
+        console.log('AAG: Fetch Videos button clicked');
+
+        const $btn = $(this);
+        const originalText = $btn.html();
+        const channel = $('#method3_channel').val() ? $('#method3_channel').val().trim() : '';
+        const apiKey = $('#youtube_api_key').val() ? $('#youtube_api_key').val().trim() : '';
+
+        if (!channel) {
+            showMessage('Please enter a YouTube Channel URL.', 'error');
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update aag-spin" style="margin-top: 4px;"></span> Fetching...');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'aag_index_youtube_channel',
+                nonce: aagAjax.nonce,
+                channel: channel,
+                api_key: apiKey
+            },
+            success: function (response) {
+                console.log('AAG: Fetch videos response:', response);
+                $btn.prop('disabled', false).html(originalText);
+
+                if (response.success) {
+                    const videoUrls = response.data;
+                    if (Array.isArray(videoUrls) && videoUrls.length > 0) {
+                        const newContent = videoUrls.join('\n');
+                        $('#method3_videos').val(newContent);
+                        showMessage(`Found ${videoUrls.length} recent videos!`, 'success');
+                    } else {
+                        showMessage('No videos found or channel is empty.', 'info');
+                    }
+                } else {
+                    showMessage('Error: ' + response.data, 'error');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AAG: Fetch videos error:', error);
+                $btn.prop('disabled', false).html(originalText);
+                showMessage('Error fetching videos. Check API Key and Channel URL.', 'error');
+            }
+        });
+    });
+
+    // Save Method 3: Video Source
+    $(document).on('submit', '#aag-method3-form', function (e) {
+        e.preventDefault();
+
+        const $form = $(this);
+        const $submitBtn = $form.find('button[type="submit"]');
+        const originalText = $submitBtn.html();
+
+        $submitBtn.prop('disabled', true).html('<span class="dashicons dashicons-update-alt aag-spin"></span> Saving...');
+
+        const channel = $('#method3_channel').val() ? $('#method3_channel').val().trim() : '';
+        const videos = $('#method3_videos').val() ? $('#method3_videos').val().trim() : '';
+
+        const data = {
+            action: 'aag_save_method3',
+            nonce: aagAjax.nonce,
+            channel: channel,
+            videos: videos
+        };
+
+        showMessage('Saving Video Source...', 'info');
+
+        $.ajax({
+            url: aagAjax.ajax_url,
+            type: 'POST',
+            data: data,
+            success: function (response) {
+                console.log('AAG: Method3 response:', response);
+                $submitBtn.prop('disabled', false).html(originalText);
+
+                if (response.success) {
+                    showMessage(response.data, 'success');
+                    refreshQueue();
+                } else {
+                    showMessage('Error: ' + response.data, 'error');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AAG: Method3 error:', error);
+                $submitBtn.prop('disabled', false).html(originalText);
+                showMessage('Error saving. Please try again.', 'error');
+            }
+        });
+    });
+
     // Save Article Requirements
     $('#aag-requirements-form').on('submit', function (e) {
         e.preventDefault();
@@ -989,7 +1085,8 @@ jQuery(document).ready(function ($) {
             include_faq: includeFaq,
             include_youtube: includeYoutube,
             article_tone: articleTone,
-            article_tone_auto: articleToneAuto ? 1 : 0
+            article_tone_auto: articleToneAuto ? 1 : 0,
+            youtube_api_key: $('#youtube_api_key').val().trim()
         };
 
         showMessage('Saving Article Requirements...', 'info');

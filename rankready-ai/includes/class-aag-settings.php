@@ -9,12 +9,14 @@ class AAG_Settings
     private $generator;
     private $license;
     private $refresher;
+    private $youtube_fetcher;
 
-    public function __construct($generator, $license, $refresher = null)
+    public function __construct($generator, $license, $refresher = null, $youtube_fetcher = null)
     {
         $this->generator = $generator;
         $this->license = $license;
         $this->refresher = $refresher;
+        $this->youtube_fetcher = $youtube_fetcher;
 
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
@@ -33,6 +35,10 @@ class AAG_Settings
         add_action('wp_ajax_aag_scan_old_articles', array($this, 'scan_old_articles'));
         add_action('wp_ajax_aag_get_refresher_suggestions', array($this, 'get_refresher_suggestions'));
         add_action('wp_ajax_aag_apply_refresher_suggestion', array($this, 'aag_apply_refresher_suggestion'));
+
+        // YouTube actions
+        add_action('wp_ajax_aag_save_method3', array($this, 'save_method3'));
+        add_action('wp_ajax_aag_index_youtube_channel', array($this, 'index_youtube_channel'));
     }
 
     public function add_admin_menu()
@@ -55,8 +61,8 @@ class AAG_Settings
         }
 
         // Updated paths for assets using AAG_PLUGIN_URL constant
-        wp_enqueue_style('aag-admin-css', AAG_PLUGIN_URL . 'assets/css/admin.css', array(), '2.0.8');
-        wp_enqueue_script('aag-admin-js', AAG_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '2.0.8', true);
+        wp_enqueue_style('aag-admin-css', AAG_PLUGIN_URL . 'assets/css/admin.css', array(), '2.0.9');
+        wp_enqueue_script('aag-admin-js', AAG_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), '2.0.9', true);
 
         wp_localize_script('aag-admin-js', 'aagAjax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -176,6 +182,9 @@ class AAG_Settings
         if (isset($_POST['freepik_api_key'])) {
             update_option('aag_freepik_api_key', sanitize_text_field($_POST['freepik_api_key']));
         }
+        if (isset($_POST['youtube_api_key'])) {
+            update_option('aag_youtube_api_key', sanitize_text_field($_POST['youtube_api_key']));
+        }
 
 
         // Handle Immediate Generation
@@ -211,6 +220,13 @@ class AAG_Settings
                 // Check if keyword is empty for Method 2
                 if (empty(trim($keyword))) {
                     wp_send_json_error('Please add a keyword in Method 2 settings before generating articles.');
+                    wp_send_json_error('Please add a keyword in Method 2 settings before generating articles.');
+                    return;
+                }
+            } elseif ($gen_method === 'method3') {
+                $videos = get_option('aag_method3_videos', '');
+                if (empty(trim($videos))) {
+                    wp_send_json_error('Please add video URLs in YouTube settings before generating articles.');
                     return;
                 }
             }
@@ -226,7 +242,8 @@ class AAG_Settings
             if ($gen_method === 'method1') {
                 $this->generator->enqueue_method1_titles_to_queue();
             } else {
-                $this->generator->populate_queue_if_needed(true); // Force populate even if queue has items
+                // For method2 and method3, we populate queue if needed
+                $this->generator->populate_queue_if_needed(true);
             }
 
             // Check if queue has pending items
@@ -288,6 +305,55 @@ class AAG_Settings
         wp_send_json_success('Method 2 (Keyword Source) saved successfully!');
     }
 
+    public function save_method3()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        update_option('aag_method3_channel', sanitize_text_field($_POST['channel']));
+        update_option('aag_method3_videos', sanitize_textarea_field($_POST['videos']));
+        update_option('aag_gen_method', 'method3');
+
+        // Trigger queue population
+        $this->generator->populate_queue_if_needed();
+
+        wp_send_json_success('Video to Blog settings saved!');
+    }
+
+    public function index_youtube_channel()
+    {
+        check_ajax_referer('aag_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $channel = sanitize_text_field($_POST['channel']);
+        // Prioritize API key passed from frontend (which falls back to stored key)
+        $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
+        if (empty($api_key)) {
+            $api_key = get_option('aag_youtube_api_key', '');
+        }
+
+        if (empty($channel)) {
+            wp_send_json_error('Channel URL is required.');
+        }
+
+        if (!$this->youtube_fetcher) {
+            wp_send_json_error('YouTube Fetcher not initialized.');
+        }
+
+        $video_urls = $this->youtube_fetcher->get_channel_videos($channel, $api_key);
+
+        if (is_wp_error($video_urls)) {
+            wp_send_json_error($video_urls->get_error_message());
+        }
+
+        // Return urls to frontend to append to textarea
+        wp_send_json_success($video_urls);
+    }
+
     public function save_requirements()
     {
         check_ajax_referer('aag_nonce', 'nonce');
@@ -297,6 +363,7 @@ class AAG_Settings
 
         update_option('aag_gemini_api_key', sanitize_text_field($_POST['gemini_api_key']));
         update_option('aag_freepik_api_key', sanitize_text_field($_POST['freepik_api_key']));
+        update_option('aag_youtube_api_key', sanitize_text_field($_POST['youtube_api_key']));
 
         update_option('aag_word_count', sanitize_text_field($_POST['target_word_count']));
         update_option('aag_include_table', filter_var($_POST['include_table'], FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
@@ -453,4 +520,5 @@ class AAG_Settings
 
         wp_send_json_success('Linking settings saved successfully!');
     }
+
 }

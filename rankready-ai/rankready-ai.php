@@ -27,20 +27,23 @@ require_once AAG_PLUGIN_DIR . 'includes/class-aag-linking.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-image-seo.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-content-gap.php';
 require_once AAG_PLUGIN_DIR . 'includes/class-aag-refresher.php';
+require_once AAG_PLUGIN_DIR . 'includes/class-aag-youtube-fetcher.php';
 
 // Initialize Plugin
 function aag_init()
 {
     $license = new AAG_License();
     $telemetry = new AAG_Telemetry();
-    $generator = new AAG_Generator($license, $telemetry);
+    $youtube_fetcher = new AAG_Youtube_Fetcher();
+
+    $generator = new AAG_Generator($license, $telemetry, $youtube_fetcher);
     $linking = new AAG_Linking($generator);
     $generator->set_linking($linking); // Inject dependency
 
     $image_seo = new AAG_Image_SEO($generator);
     $content_gap = new AAG_Content_Gap($generator);
     $refresher = new AAG_Refresher($generator);
-    $settings = new AAG_Settings($generator, $license, $refresher);
+    $settings = new AAG_Settings($generator, $license, $refresher, $youtube_fetcher);
 
     return $generator;
 }
